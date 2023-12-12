@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+{% from 'bootstrap5/form.html' import render_form %}
+
+<div class="container">
+    <div class="row justify-content-start align-items-start vh-100">
+        <div class="col-lg-6">
+            <main class="form-signin">
+                <h1>Login</h1>
+                <form method="POST" action="{{ url_for('login') }}" novalidate>
+                    {{ render_form(form) }}
+                </form>
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                {% for message in messages %}
+                <p>{{ message }}</p>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+            </main>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% from 'bootstrap5/form.html' import render_form %}
+{% block content %}
+
+<div class="container">
+    <div class="table-responsive" style="margin: 50px;">
+        <table class="table table-bordered">
+            <thead class="table" style="background-color: #82A8B5;color:white;">
+            <tr>
+                <th scope="col">League Name</th>
+                <th scope="col">Location</th>
+                <th scope="col">Days</th>
+                <th scope="col">Division</th>
+                <th scope="col">Team Size</th>
+                <th scope="col"></th>
+                {% if current_user.is_admin %}
+                <th scope="col"></th>
+                {% endif %}
+            </tr>
+            </thead>
+            <tbody class="table-group-divider">
+            {% for league in all_leagues: %}
+            <tr>
+
+                <td>{{ league.name }}</td>
+                <td><a href="{{ league.maps_url }}">{{ league.location }}</a></td>
+                <td>{{ league.days }}</td>
+                <td>{{ league.division }}</td>
+                <td>{{ league.team_size }}</td>
+                {% if not current_user.is_authenticated %}
+                <td class="text-center"><strong><a class="btn" role="button" style="background-color:#F4922A"  href="{{url_for('register')}}">Join!</a> </strong></td>
+                {% else %}
+                <td class="text-center"><strong><a class="btn" role="button" style="background-color:#F4922A"  href="{{url_for('user_chosen_league',chosen_league_id=league.id)}}">Join!</a> </strong></td>
+                {% endif %}
+                {% if current_user.is_admin %}
+                <td class="text-center"><strong><a class="btn btn-danger" role="button" onclick="window.location.href='{{url_for('remove_league', player_id=current_user.id, chosen_league_id=league.id)}}'">Delete</a> </strong></td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+            {% if current_user.is_admin %}
+            <form method="POST" action="{{ url_for('all_leagues') }}">
+    {{ form.csrf_token }}
+
+            <tr>
+                <td>{{form.name}}</td>
+                <td>{{form.location}}</td>
+                <td>{{form.days}}</td>
+                <td>{{form.division}}</td>
+                <td>{{form.team_size}}</td>
+                <td>{{form.submit}}</td>
+                <td></td>
+            </tr>
+                <tr>
+                    <td>Maps Url -></td>
+                    <td>{{form.maps_url}}</td>
+                </tr>
+            </form>
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

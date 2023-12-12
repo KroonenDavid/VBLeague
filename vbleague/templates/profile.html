@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% from 'bootstrap5/form.html' import render_form %}
+{% block content %}
+<div class="container" style="margin-top: 50px" xmlns="http://www.w3.org/1999/html">
+
+    <!-- PROFILE CARD -->
+    <div class="row justify-content-end">
+        <div class="col-6">
+            <div class="card text-center">
+                <div class="card-header">
+                    <h1>{{ current_user.name }}</h1>
+                    {% if current_user.teams_joined %}
+                    {% for team in current_user.teams_joined %}
+                    <h3>
+                        <a href="{{ url_for('team_page', chosen_league_id=team.parent_league.id, team_id=team.id) }}">
+                            {{ team.name }}
+                        </a>
+                        - {{ team.parent_league.name }}
+                        {% if current_user.id != team.captain_id %}
+                        -
+                        <a href="{{url_for('remove_player_from_team', player_id=current_user.id, team_id=team.id, league_id=team.parent_league.id)}}">Leave
+                            Team</a>
+                        {% else %}
+                        -
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#exampleModal">Disband Team</a>
+                        <!------------ DISBAND TEAM MODAL -------------------->
+
+                        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog"
+                             aria-labelledby="exampleModalLabel"
+                             aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <!-- Modal content -->
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="exampleModalLabel">Delete {{team.name}}?</h5>
+                                        <button type="button" class="close"
+                                                onclick="window.location.href='{{ url_for('my_profile') }}'"
+                                                data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Are you sure you want to <strong>delete {{team.name}}?</strong>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-danger" data-dismiss="modal"
+                                                onclick="window.location.href='{{url_for('remove_team', player_id=current_user.id, team_id=team.id, league_id=team.parent_league.id)}}'">
+                                            Delete
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                                                onclick="window.location.href='{{ url_for('my_profile') }}'">Close
+                                        </button>
+                                        <!-- Additional buttons if needed -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </h3>
+                    {% endfor %}
+                    {% else %}
+                    <h3>No teams joined yet!</h3>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <img src="{{ url_for('static', filename=current_user.profile_pic) }}" width="600" height="600">
+                </div>
+                <div class="card-footer text-body-secondary">
+                    <p><strong>Email:</strong> {{current_user.email }}</p>
+                    <p><strong>Bio:</strong> {{current_user.bio}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="text-end">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                    Edit Profile
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!------------ EDIT PROFILE MODAL -------------------->
+
+    <div class="modal fade" id="editProfileModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4>Edit Profile</h4>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Modal content -->
+                    {{ render_form(form) }}
+                </div>
+
+                <!-- Additional buttons if needed -->
+            </div>
+        </div>
+    </div>
+
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    {% for message in messages %}
+    <p style="color:red">{{ message }}</p>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+
+</div>
+{% endblock %}
