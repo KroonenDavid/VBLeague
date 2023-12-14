@@ -31,7 +31,7 @@ class User(UserMixin, db.Model):
     saves_made = db.Column(db.Integer, nullable=False, default=0)
     goals_against = db.Column(db.Integer, nullable=False, default=0)
     save_percentage = db.Column(db.Integer, nullable=False, default=0)
-    profile_pic = db.Column(db.String(1000), nullable=False, default='images/Default_pfp.png')
+    profile_pic = db.Column(db.String(1000), nullable=False, default='Default_pfp.png')
 
 
 class League(db.Model):

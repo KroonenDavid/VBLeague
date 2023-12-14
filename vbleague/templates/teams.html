@@ -29,7 +29,7 @@
     {% for team in league.teams %}
     {% if team.name != "Free Agents" %}
       <div class="col">
-        <div class="card card-cover h-100 overflow-hidden text-bg-dark rounded-4 shadow-lg" style="background-image: url('{{ url_for('static', filename=team.logo) }}')">
+        <div class="card card-cover h-100 overflow-hidden text-bg-dark rounded-4 shadow-lg" style="background-image: url('{{ url_for('static', filename='images/profile_pics/' + team.logo) }}')">
           <div class="d-flex flex-column h-100 p-5 pb-3 text-white text-shadow-1">
             <h3 class="pt-5 mt-5 mb-4 display-6 lh-1 fw-bold"><a href="{{url_for('team_page', chosen_league_id=league.id, team_id=team.id)}}" style="text-decoration: none !important; color:white;">{{team.name}}</a> </h3>
             <a class="btn btn-primary" style="background-color: #F4922A" href="{{url_for('join_chosen_team', chosen_league_id=team.league_id, team_id=team.id)}}" role="button">Join Team</a>

@@ -10,12 +10,14 @@ app.secret_key = os.getenv("SECRET_KEY")
 UPLOAD_FOLDER = 'static\images'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///VBLeague.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DB_URI")
 db = SQLAlchemy()
 db.init_app(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message_category = 'info'
 
 bootstrap = Bootstrap5(app)
 

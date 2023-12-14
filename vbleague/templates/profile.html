@@ -63,7 +63,7 @@
                     {% endif %}
                 </div>
                 <div class="card-body">
-                    <img src="{{ url_for('static', filename=current_user.profile_pic) }}" width="600" height="600">
+                    <img src="{{ image_file }}" class="img-fluid" style="max-width: 100%; height: auto;">
                 </div>
                 <div class="card-footer text-body-secondary">
                     <p><strong>Email:</strong> {{current_user.email }}</p>
@@ -92,8 +92,11 @@
                 </div>
 
                 <div class="modal-body">
-                    <!-- Modal content -->
+                    <form method="POST" action="" enctype="multipart/form-data">
                     {{ render_form(form) }}
+                    </form>
+                </div>
+
                 </div>
 
                 <!-- Additional buttons if needed -->

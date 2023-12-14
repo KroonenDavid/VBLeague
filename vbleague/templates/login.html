@@ -3,21 +3,34 @@
 {% from 'bootstrap5/form.html' import render_form %}
 
 <div class="container">
+
     <div class="row justify-content-start align-items-start vh-100">
         <div class="col-lg-6">
             <main class="form-signin">
-                <h1>Login</h1>
-                <form method="POST" action="{{ url_for('login') }}" novalidate>
-                    {{ render_form(form) }}
-                </form>
-                {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                {% for message in messages %}
-                <p>{{ message }}</p>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{category}}">
+                    {{ message }}
+                </div>
                 {% endfor %}
                 {% endif %}
                 {% endwith %}
+                <h1>Login</h1>
+                <form method="POST" novalidate>
+                    {{ render_form(form) }}
+                    <div style="margin-top: 20px">
+                    <small class="text-muted ml-2">
+                        <a href="#">Forgot Password?</a>
+                    </small>
+                        </div>
+                </form>
             </main>
+            <div class="border-top pt-3" style="margin-top: 20px">
+                <small class="text-muted">
+                    Need An Account? <a class="ml-2" href="{{ url_for('register') }}">Register</a>
+                </small>
+            </div>
         </div>
     </div>
 </div>

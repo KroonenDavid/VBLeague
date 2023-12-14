@@ -22,7 +22,7 @@
                     {% endif %}
                 </div>
                 <div class="card-body">
-                    <img src="{{ url_for('static', filename=player.profile_pic) }}" width="600" height="600">
+                    <img src="{{ image_file }}" class="img-fluid" style="max-width: 100%; height: auto;">
                 </div>
                 <div class="card-footer text-body-secondary">
                     <p><strong>Email:</strong> {{player.email }}</p>

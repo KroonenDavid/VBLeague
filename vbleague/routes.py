@@ -6,6 +6,8 @@ from werkzeug.utils import secure_filename
 import os
 from vbleague.forms import RegisterForm, LoginForm, TeamLoginForm, CreateTeamForm, CreateLeagueForm, EditProfile
 from vbleague import app, login_manager, db
+import secrets
+from PIL import Image
 
 
 with app.app_context():
@@ -18,7 +20,7 @@ def load_user(user_id):
 
 @app.route("/")
 def home():
-    return render_template('index.html', current_user=current_user)
+    return render_template('index.html')
 
 
 @app.route("/login", methods=["POST", "GET"])
@@ -31,21 +33,17 @@ def login():
 
         user = User.query.filter_by(email=email).first()
 
-        if user:
-            is_password_correct = check_password_hash(user.password, password)
+        if user and check_password_hash(user.password, password):
+            login_user(user, remember=login_form.remember.data)
 
-            if is_password_correct:
-                login_user(user)
-                return redirect(url_for('my_profile'))
+            next_page = request.args.get('next')
 
-            else:
-                flash('Sorry that password and e-mail combination does not match our records.')
-                return redirect(url_for('login'))
+            return redirect(next_page) if next_page else redirect(url_for('my_profile'))
+
         else:
-            flash('E-mail does not exist.')
-            return redirect(url_for('login'))
+            flash('Sorry that password and e-mail combination does not match our records', 'danger')
 
-    return render_template('login.html', form=login_form, current_user=current_user)
+    return render_template('login.html', form=login_form)
 
 
 @app.route("/register", methods=["POST", "GET"])
@@ -53,11 +51,6 @@ def register():
     register_form = RegisterForm()
 
     if register_form.validate_on_submit():
-        user = User.query.filter_by(email=register_form.email.data).first()
-
-        if user:
-            flash('This e-mail already exists. Please login-in')
-            return redirect(url_for('register'))
 
         hash_and_salted_pass = generate_password_hash(password=register_form.password.data, method='pbkdf2:sha256',
                                                       salt_length=8)
@@ -78,7 +71,7 @@ def register():
 
         return redirect(url_for('my_profile'))
 
-    return render_template('register.html', form=register_form, current_user=current_user)
+    return render_template('register.html', form=register_form)
 
 
 @app.route("/leagues", methods=["POST", "GET"])
@@ -115,8 +108,21 @@ def all_leagues():
 
         return redirect(url_for('all_leagues'))
 
-    return render_template('leagues.html', current_user=current_user, all_leagues=leagues, form=create_league_form)
+    return render_template('leagues.html', all_leagues=leagues, form=create_league_form)
 
+
+def save_picture(form_picture):
+    random_hex = secrets.token_hex(8)
+    _, f_ext = os.path.splitext(form_picture.filename)
+    picture_fn = random_hex + f_ext
+    picture_path = os.path.join(app.root_path, 'static/images/profile_pics', picture_fn)
+
+    output_size = (500,500)
+    i = Image.open(form_picture)
+    i.thumbnail(output_size)
+    i.save(picture_path)
+
+    return picture_fn
 
 @app.route("/my-profile", methods=["POST", "GET"])
 @login_required
@@ -126,32 +132,28 @@ def my_profile():
 
     if edit_profile_form.validate_on_submit():
         current_user.bio = edit_profile_form.bio.data
-        print(current_user.bio)
+
+        print(edit_profile_form.profile_pic.data)
 
         if edit_profile_form.profile_pic.data:
-            if current_user.profile_pic != 'images/Default_pfp.png':
-                old_filepath = f"vbleague/static/{current_user.profile_pic}"
-                os.remove(old_filepath)
-
-                file = edit_profile_form.profile_pic.data
-                filename = secure_filename(file.filename)
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(file_path)
-
-                relative_path = os.path.relpath(file_path, app.static_folder).replace(os.sep, '/')
-                current_user.profile_pic = relative_path
-
+            picture_file = save_picture(edit_profile_form.profile_pic.data)
+            current_user.profile_pic = picture_file
         db.session.commit()
 
         return redirect(url_for('my_profile'))
 
-    return render_template('profile.html', current_user=current_user, form=edit_profile_form)
+    elif request.method == 'GET':
+        edit_profile_form.bio.data = current_user.bio
+
+    image_file = url_for('static', filename=f'images/profile_pics/{current_user.profile_pic}')
+
+    return render_template('profile.html', form=edit_profile_form, image_file=image_file)
 
 
 @app.route("/leagues/<int:chosen_league_id>")
 def user_chosen_league(chosen_league_id):
     league = db.get_or_404(League, chosen_league_id)
-    return render_template('selected_league.html', league=league, current_user=current_user)
+    return render_template('selected_league.html', league=league)
 
 
 #
@@ -168,22 +170,23 @@ def user_chosen_league(chosen_league_id):
 #     pass
 #
 @app.route("/leagues/<int:chosen_league_id>/join")
+@login_required
 def join_chosen_league(chosen_league_id):
     league = db.get_or_404(League, chosen_league_id)
-    return render_template('join.html', league=league, current_user=current_user)
+    return render_template('join.html', league=league)
 
 
 @app.route("/leagues/<int:chosen_league_id>/free-agent")
 def join_chosen_league_free(chosen_league_id):
     league = db.get_or_404(League, chosen_league_id)
-    return render_template('free-agent-join.html', league=league, current_user=current_user)
+    return render_template('free-agent-join.html', league=league)
 
 
 @app.route("/leagues/<int:chosen_league_id>/teams")
 def show_all_teams(chosen_league_id):
     league = db.get_or_404(League, chosen_league_id)
 
-    return render_template('teams.html', league=league, current_user=current_user)
+    return render_template('teams.html', league=league)
 
 @app.route("/leagues/<int:chosen_league_id>/teams/free-agents/join")
 def join_free_agents(chosen_league_id):
@@ -231,7 +234,7 @@ def join_chosen_team(chosen_league_id, team_id):
             flash('Sorry, that is the wrong password.')
             return redirect(url_for('join_chosen_team', chosen_league_id=chosen_league_id, team_id=team_id))
 
-    return render_template('join-team.html', league=league, team=team, form=team_login, current_user=current_user)
+    return render_template('join-team.html', league=league, team=team, form=team_login)
 
 
 @app.route("/leagues/<int:chosen_league_id>/create-team", methods=["POST", "GET"])
@@ -271,13 +274,8 @@ def create_team(chosen_league_id):
         )
 
         if team_form.logo.data:
-            file = team_form.logo.data
-            filename = secure_filename(file.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(file_path)
-
-            relative_path = os.path.relpath(file_path, app.static_folder).replace(os.sep, '/')
-            new_team.logo = relative_path
+            picture_file = save_picture(team_form.logo.data)
+            new_team.logo = picture_file
 
         new_team.players.append(current_user)
 
@@ -286,7 +284,7 @@ def create_team(chosen_league_id):
 
         return redirect(url_for('team_page', chosen_league_id=chosen_league_id, team_id=new_team.id))
 
-    return render_template('create_team.html', league=league, current_user=current_user, form=team_form)
+    return render_template('create_team.html', league=league, form=team_form)
 
 
 @app.route('/leagues/<int:chosen_league_id>/teams/<int:team_id>')
@@ -294,7 +292,7 @@ def team_page(chosen_league_id, team_id):
     league = db.get_or_404(League, chosen_league_id)
     team = db.get_or_404(Team, team_id)
 
-    return render_template('team_page.html', league=league, team=team, current_user=current_user)
+    return render_template('team_page.html', league=league, team=team)
 
 
 @app.route('/logout')
@@ -305,7 +303,8 @@ def logout():
 @app.route('/players/<int:player_id>')
 def player_profile(player_id):
     player = db.get_or_404(User, player_id)
-    return render_template('player-profile.html', player=player)
+    image_file = url_for('static', filename=f'images/profile_pics/{player.profile_pic}')
+    return render_template('player-profile.html', player=player, image_file=image_file)
 
 
 @app.route('/remove-player-from-team')
@@ -352,4 +351,4 @@ def remove_league():
 
     flash('League deleted successfully')
 
-    return redirect(url_for('all_leagues', league=league, current_user=current_user))
+    return redirect(url_for('all_leagues', league=league))
