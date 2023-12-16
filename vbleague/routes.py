@@ -4,14 +4,18 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, login_required, current_user, logout_user
 from werkzeug.utils import secure_filename
 import os
-from vbleague.forms import RegisterForm, LoginForm, TeamLoginForm, CreateTeamForm, CreateLeagueForm, EditProfile
-from vbleague import app, login_manager, db
+from vbleague.forms import (RegisterForm, LoginForm, TeamLoginForm,
+                            CreateTeamForm, CreateLeagueForm, EditProfile,
+                            RequestResetForm, ResetPasswordForm)
+from vbleague import app, login_manager, db, mail
 import secrets
 from PIL import Image
+from flask_mail import Message
 
 
 with app.app_context():
     db.create_all()
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -51,7 +55,6 @@ def register():
     register_form = RegisterForm()
 
     if register_form.validate_on_submit():
-
         hash_and_salted_pass = generate_password_hash(password=register_form.password.data, method='pbkdf2:sha256',
                                                       salt_length=8)
 
@@ -96,12 +99,12 @@ def all_leagues():
         db.session.commit()
 
         new_team = Team(
-                name="Free Agents",
-                description="Free Agent List",
-                league_id=new_league.id,
-                password="jiojasdoijiooajisdoijasd",
-                captain_id=1,
-            )
+            name="Free Agents",
+            description="Free Agent List",
+            league_id=new_league.id,
+            password="jiojasdoijiooajisdoijasd",
+            captain_id=1,
+        )
 
         db.session.add(new_team)
         db.session.commit()
@@ -117,27 +120,33 @@ def save_picture(form_picture):
     picture_fn = random_hex + f_ext
     picture_path = os.path.join(app.root_path, 'static/images/profile_pics', picture_fn)
 
-    output_size = (500,500)
+    output_size = (500, 500)
     i = Image.open(form_picture)
     i.thumbnail(output_size)
     i.save(picture_path)
 
     return picture_fn
 
+
 @app.route("/my-profile", methods=["POST", "GET"])
 @login_required
 def my_profile():
-
     edit_profile_form = EditProfile()
 
     if edit_profile_form.validate_on_submit():
         current_user.bio = edit_profile_form.bio.data
 
-        print(edit_profile_form.profile_pic.data)
+        old_profile_pic = current_user.profile_pic
 
         if edit_profile_form.profile_pic.data:
             picture_file = save_picture(edit_profile_form.profile_pic.data)
             current_user.profile_pic = picture_file
+
+            if old_profile_pic and old_profile_pic != 'Default_pfp.png':
+                old_profile_pic_path = os.path.join(app.root_path, 'static/images/profile_pics', old_profile_pic)
+                if os.path.exists(old_profile_pic_path):
+                    os.remove(old_profile_pic_path)
+
         db.session.commit()
 
         return redirect(url_for('my_profile'))
@@ -177,6 +186,7 @@ def join_chosen_league(chosen_league_id):
 
 
 @app.route("/leagues/<int:chosen_league_id>/free-agent")
+@login_required
 def join_chosen_league_free(chosen_league_id):
     league = db.get_or_404(League, chosen_league_id)
     return render_template('free-agent-join.html', league=league)
@@ -188,7 +198,9 @@ def show_all_teams(chosen_league_id):
 
     return render_template('teams.html', league=league)
 
+
 @app.route("/leagues/<int:chosen_league_id>/teams/free-agents/join")
+@login_required
 def join_free_agents(chosen_league_id):
     free_agents_team = Team.query.filter_by(name="Free Agents", league_id=chosen_league_id).first()
 
@@ -209,7 +221,9 @@ def join_free_agents(chosen_league_id):
 
     return redirect(url_for('team_page', chosen_league_id=chosen_league_id, team_id=free_agents_team.id))
 
+
 @app.route("/leagues/<int:chosen_league_id>/teams/<int:team_id>/join", methods=['POST', 'GET'])
+@login_required
 def join_chosen_team(chosen_league_id, team_id):
     league = db.get_or_404(League, chosen_league_id)
     team = db.get_or_404(Team, team_id)
@@ -244,7 +258,6 @@ def create_team(chosen_league_id):
     league = db.get_or_404(League, chosen_league_id)
 
     if request.method == "POST":
-
 
         is_on_team = any(
             db.session.query(team_membership)
@@ -300,6 +313,7 @@ def logout():
     logout_user()
     return redirect(url_for('home'))
 
+
 @app.route('/players/<int:player_id>')
 def player_profile(player_id):
     player = db.get_or_404(User, player_id)
@@ -308,6 +322,7 @@ def player_profile(player_id):
 
 
 @app.route('/remove-player-from-team')
+@login_required
 def remove_player_from_team():
     player_id = request.args.get('player_id')
     team_id = request.args.get('team_id')
@@ -324,6 +339,7 @@ def remove_player_from_team():
 
 
 @app.route('/remove-team')
+@login_required
 def remove_team():
     team_id = request.args.get('team_id')
     league_id = request.args.get('league_id')
@@ -341,7 +357,9 @@ def remove_team():
 
     return redirect(request.referrer)
 
+
 @app.route('/remove-league')
+@login_required
 def remove_league():
     league_id = request.args.get('chosen_league_id')
     league = db.get_or_404(League, league_id)
@@ -352,3 +370,54 @@ def remove_league():
     flash('League deleted successfully')
 
     return redirect(url_for('all_leagues', league=league))
+
+def send_reset_email(user):
+    token = user.get_reset_token()
+    msg = Message('Password Reset Request',
+                  sender=os.getenv('EMAIL'),
+                  recipients=[user.email])
+    msg.body = (f'To reset your password, visit the following link\n'
+                f'{url_for("reset_token", token=token, _external=True)}\n'
+                f'If you did not make this request then simply ignore this email.')
+
+    mail.send(msg)
+@app.route('/reset-password', methods=['GET', 'POST'])
+def reset_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+
+    form = RequestResetForm ()
+
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        send_reset_email(user)
+        flash('An email has been sent with instructions to reset your password', 'info')
+        return redirect(url_for('login'))
+
+
+    return render_template('reset_request.html', form=form)
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_token(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+
+    user = User.verify_reset_token(token)
+    if user is None:
+        flash('That is an invalid or expired token', 'warning')
+        return redirect(url_for('reset_request'))
+    form = ResetPasswordForm()
+
+    if form.validate_on_submit():
+        hash_and_salted_pass = generate_password_hash(password=form.password.data, method='pbkdf2:sha256',
+                                                      salt_length=8)
+
+        user.password = hash_and_salted_pass
+
+        db.session.commit()
+
+        flash('Password successfully reset, please log-in')
+        return redirect(url_for('login'))
+
+    return render_template('reset_token.html', form=form)
+

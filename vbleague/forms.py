@@ -16,6 +16,7 @@ def over_18_check(form, field):
     if birthdate > eighteen_years_ago:
         raise ValidationError('Must be 18 years or older.')
 
+
 def FileSizeLimit(max_size_in_mb):
     max_bytes = max_size_in_mb * 1024 * 1024
 
@@ -25,6 +26,7 @@ def FileSizeLimit(max_size_in_mb):
         field.data.seek(0)
 
     return file_length_check
+
 
 class RegisterForm(FlaskForm):
     name = StringField('Full Name', validators=[DataRequired()])
@@ -41,8 +43,6 @@ class RegisterForm(FlaskForm):
         user = User.query.filter_by(email=email.data).first()
         if user:
             raise ValidationError('This e-mail already exists. Please login-in')
-
-
 
 
 class LoginForm(FlaskForm):
@@ -65,17 +65,17 @@ class CreateTeamForm(FlaskForm):
     submit = SubmitField(label="Create Team")
 
 
-
-
 class EditProfile(FlaskForm):
     bio = StringField('Bio')
-    profile_pic = FileField('Profile Pic', validators=[FileAllowed(['jpg', 'png', 'jpeg']), FileSizeLimit(max_size_in_mb=10)])
+    profile_pic = FileField('Profile Pic',
+                            validators=[FileAllowed(['jpg', 'png', 'jpeg']), FileSizeLimit(max_size_in_mb=10)])
     submit = SubmitField(label="Save Changes")
 
 
 class LeagueForm(FlaskForm):
     bio = CKEditorField("Bio", validators=[DataRequired()])
     submit = SubmitField("Submit Bio")
+
 
 class CreateLeagueForm(FlaskForm):
     name = StringField(validators=[DataRequired()])
@@ -86,3 +86,19 @@ class CreateLeagueForm(FlaskForm):
     maps_url = StringField(validators=[DataRequired()])
     submit = SubmitField("Add")
 
+
+class RequestResetForm(FlaskForm):
+    email = EmailField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField(label="Request Password Reset")
+
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if not user:
+            raise ValidationError('There is no account with that email.')
+
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
+    confirmed_password = PasswordField('Confirm Password',
+                                       validators=[EqualTo('password', message="Passwords must match")])
+    submit = SubmitField(label="Reset Password")

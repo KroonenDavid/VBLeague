@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+{% from 'bootstrap5/form.html' import render_form %}
+
+<div class="container">
+
+    <div class="row justify-content-start align-items-start vh-100">
+        <div class="col-lg-6">
+            <main class="form-signin">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{category}}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+                <h1>Reset Password</h1>
+                <form method="POST" novalidate>
+                    {{ render_form(form) }}
+                </form>
+            </main>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

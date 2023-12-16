@@ -1,6 +1,8 @@
 from vbleague import db
 from flask_login import UserMixin
 from sqlalchemy.orm import relationship
+from itsdangerous import URLSafeTimedSerializer as Serializer
+from vbleague import app
 
 
 team_membership = db.Table(
@@ -32,6 +34,19 @@ class User(UserMixin, db.Model):
     goals_against = db.Column(db.Integer, nullable=False, default=0)
     save_percentage = db.Column(db.Integer, nullable=False, default=0)
     profile_pic = db.Column(db.String(1000), nullable=False, default='Default_pfp.png')
+
+    def get_reset_token(self):
+        s = Serializer(app.config['SECRET_KEY'])
+        return s.dumps({'user_id': self.id})
+
+    @staticmethod
+    def verify_reset_token(token, expires_sec=1800):
+        s = Serializer(app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token, max_age=expires_sec)['user_id']
+        except:
+            return None
+        return User.query.get(user_id)
 
 
 class League(db.Model):
