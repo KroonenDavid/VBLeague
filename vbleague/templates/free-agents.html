@@ -29,13 +29,13 @@
         <h1>Players</h1>
         <ul>
             {% for player in team.players: %}
-            <li><a href="{{ url_for('player_profile', player_id=player.id) }}">{{player.name}}</a>
+            <li><a href="{{ url_for('users.player_profile', player_id=player.id) }}">{{player.name}}</a>
                 {% if player.id == team.captain_id %} <strong>(Captain)</strong> {% endif %}
                 {% if player.id == current_user.id and current_user.id != team.captain_id %} - <a
-                        href="{{url_for('remove_player_from_team', player_id=player.id, team_id=team.id, league_id=league.id)}}">Leave
+                        href="{{url_for('teams.remove_player_from_team', player_id=player.id, team_id=team.id, league_id=league.id)}}">Leave
                     Team</a>{% endif %}
                 {% if current_user.id == team.captain_id and player.id != current_user.id %} - <a
-                        href="{{url_for('remove_player_from_team', player_id=player.id, team_id=team.id, league_id=league.id)}}">Remove
+                        href="{{url_for('teams.remove_player_from_team', player_id=player.id, team_id=team.id, league_id=league.id)}}">Remove
                     Player</a>{% endif %}
             </li>
 
@@ -50,7 +50,7 @@
                 <!-- Modal content -->
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">Delete {{team.name}}?</h5>
-                    <button type="button" class="close" onclick="window.location.href='{{ url_for('my_profile') }}'"
+                    <button type="button" class="close" onclick="window.location.href='{{ url_for('users.my_profile') }}'"
                             data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -60,11 +60,11 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger" data-dismiss="modal"
-                            onclick="window.location.href='{{url_for('remove_team', player_id=current_user.id, team_id=team.id, league_id=team.parent_league.id)}}'">
+                            onclick="window.location.href='{{url_for('teams.remove_team', player_id=current_user.id, team_id=team.id, league_id=team.parent_league.id)}}'">
                         Delete
                     </button>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal"
-                            onclick="window.location.href='{{ url_for('my_profile') }}'">Close
+                            onclick="window.location.href='{{ url_for('users.my_profile') }}'">Close
                     </button>
                     <!-- Additional buttons if needed -->
                 </div>

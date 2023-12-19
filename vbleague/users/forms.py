@@ -1,11 +1,9 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, EmailField, DateField, SelectField, BooleanField
-from flask_wtf.file import FileField, FileAllowed, FileSize
+from flask_wtf.file import FileField, FileAllowed
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
-from flask_ckeditor import CKEditorField
 from datetime import datetime, timedelta
 from vbleague.models import User
-
 
 def over_18_check(form, field):
     birthdate = field.data
@@ -26,7 +24,6 @@ def FileSizeLimit(max_size_in_mb):
         field.data.seek(0)
 
     return file_length_check
-
 
 class RegisterForm(FlaskForm):
     name = StringField('Full Name', validators=[DataRequired()])
@@ -51,41 +48,11 @@ class LoginForm(FlaskForm):
     remember = BooleanField('Remember Me')
     submit = SubmitField(label="Log In")
 
-
-class TeamLoginForm(FlaskForm):
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
-    submit = SubmitField(label="Log In")
-
-
-class CreateTeamForm(FlaskForm):
-    name = StringField('Team Name', validators=[DataRequired()])
-    description = StringField('Team Description', validators=[DataRequired()])
-    password = StringField('Password')
-    logo = FileField('Logo', validators=[FileAllowed(['jpg', 'png', 'jpeg']), FileSizeLimit(max_size_in_mb=10)])
-    submit = SubmitField(label="Create Team")
-
-
 class EditProfile(FlaskForm):
     bio = StringField('Bio')
     profile_pic = FileField('Profile Pic',
                             validators=[FileAllowed(['jpg', 'png', 'jpeg']), FileSizeLimit(max_size_in_mb=10)])
     submit = SubmitField(label="Save Changes")
-
-
-class LeagueForm(FlaskForm):
-    bio = CKEditorField("Bio", validators=[DataRequired()])
-    submit = SubmitField("Submit Bio")
-
-
-class CreateLeagueForm(FlaskForm):
-    name = StringField(validators=[DataRequired()])
-    location = StringField(validators=[DataRequired()])
-    days = StringField(validators=[DataRequired()])
-    division = StringField(validators=[DataRequired()])
-    team_size = StringField(validators=[DataRequired()])
-    maps_url = StringField(validators=[DataRequired()])
-    submit = SubmitField("Add")
-
 
 class RequestResetForm(FlaskForm):
     email = EmailField('Email', validators=[DataRequired(), Email()])

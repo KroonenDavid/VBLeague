@@ -38,13 +38,13 @@
                 <div class="d-inline-flex flex-column gap-10 mb-5">
                     {% if not current_user.is_authenticated %}
                     <button class="btn btn-lg px-5 square text-white"
-                            onclick="window.location.href='{{ url_for('register') }}'" type="button"
+                            onclick="window.location.href='{{ url_for('users.register') }}'" type="button"
                             style="background-color: #F4922A; margin-top: 50px;">
                         Play Now!
                     </button>
                     {% else %}
                     <button class="btn btn-lg px-5 square text-white"
-                            onclick="window.location.href='{{ url_for('all_leagues') }}'" type="button"
+                            onclick="window.location.href='{{ url_for('leagues.all_leagues') }}'" type="button"
                             style="background-color: #F4922A; margin-top: 50px;">
                         Play Now!
                     </button>
@@ -67,24 +67,24 @@
             </a>
 
             <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-                <li><a href="{{url_for('home')}}" class="nav-link px-2 text-secondary">Home</a></li>
-                <li><a href="{{url_for('all_leagues')}}" class="nav-link px-2 text-white">Leagues</a></li>
+                <li><a href="{{url_for('main.home')}}" class="nav-link px-2 text-secondary">Home</a></li>
+                <li><a href="{{url_for('leagues.all_leagues')}}" class="nav-link px-2 text-white">Leagues</a></li>
                 <li><a href="#" class="nav-link px-2 text-white">Stats & Tables</a></li>
                 <li><a href="#" class="nav-link px-2 text-white">Schedule</a></li>
             </ul>
             <div class="text-end">
                 {% if not current_user.is_authenticated %}
-                <button type="button" onclick="window.location.href='{{ url_for('login') }}';"
+                <button type="button" onclick="window.location.href='{{ url_for('users.login') }}';"
                         class="btn btn-outline-light me-2">Login
                 </button>
-                <button type="button" onclick="window.location.href='{{ url_for('register') }}';"
+                <button type="button" onclick="window.location.href='{{ url_for('users.register') }}';"
                         class="btn btn-warning">Register
                 </button>
                 {% else %}
-                <button type="button" onclick="window.location.href='{{ url_for('my_profile') }}';"
+                <button type="button" onclick="window.location.href='{{ url_for('users.my_profile') }}';"
                         class="btn btn-warning text-white" style="background-color: #82A8B5">My Profile
                 </button>
-                <button type="button" onclick="window.location.href='{{ url_for('logout') }}';"
+                <button type="button" onclick="window.location.href='{{ url_for('users.logout') }}';"
                         class="btn btn-warning text-white" style="background-color: #82A8B5">Log Out
                 </button>
                 {% endif %}

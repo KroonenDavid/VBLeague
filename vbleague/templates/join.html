@@ -17,9 +17,9 @@
 
 <div class="container">
     <div style="margin-top: 50px">
-        <h2><a href="{{url_for('create_team', chosen_league_id=league.id)}}">Create a Team</a></h2>
-        <h2><a href="{{url_for('show_all_teams',chosen_league_id=league.id)}}">Join a Team</a></h2>
-        <h2><a href="{{url_for('join_free_agents', chosen_league_id=league.id)}}">Join as a Free Agent</a></h2>
+        <h2><a href="{{url_for('teams.create_team', chosen_league_id=league.id)}}">Create a Team</a></h2>
+        <h2><a href="{{url_for('teams.show_all_teams',chosen_league_id=league.id)}}">Join a Team</a></h2>
+        <h2><a href="{{url_for('teams.join_free_agents', chosen_league_id=league.id)}}">Join as a Free Agent</a></h2>
     </div>
 </div>
 

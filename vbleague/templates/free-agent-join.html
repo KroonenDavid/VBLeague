@@ -33,7 +33,7 @@
                 <label for="name" class="form-label">Cardholder Name</label>
                 <input type="text" class="form-control" id="name" placeholder="Cardholder name" required>
               </div>
-              <button type="submit"  onclick="window.location.href='{{ url_for('team_page', chosen_league_id=league.id, team_id=1) }}'" class="btn btn-primary d-block w-100">Pay Now</button>
+              <button type="submit"  onclick="window.location.href='{{ url_for('teams.team_page', chosen_league_id=league.id, team_id=1) }}'" class="btn btn-primary d-block w-100">Pay Now</button>
             </form>
           </div>
         </div>

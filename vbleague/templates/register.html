@@ -6,7 +6,7 @@
         <div class="col-lg-6">
             <main class="form-signin">
                 <h1>Join VBLeague!</h1>
-                <form method="POST" action="{{ url_for('register') }}" novalidate>
+                <form method="POST" action="{{ url_for('users.register') }}" novalidate>
                     {{ render_form(form) }}
                 </form>
                 {% with messages = get_flashed_messages() %}

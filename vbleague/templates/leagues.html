@@ -27,14 +27,14 @@
                 <td>{{ league.days }}</td>
                 <td>{{ league.division }}</td>
                 <td>{{ league.team_size }}</td>
-                <td class="text-center"><strong><a class="btn" role="button" style="background-color:#F4922A"  href="{{url_for('user_chosen_league',chosen_league_id=league.id)}}">Join!</a> </strong></td>
+                <td class="text-center"><strong><a class="btn" role="button" style="background-color:#F4922A"  href="{{url_for('leagues.user_chosen_league',chosen_league_id=league.id)}}">Join!</a> </strong></td>
                 {% if current_user.is_admin %}
-                <td class="text-center"><strong><a class="btn btn-danger" role="button" onclick="window.location.href='{{url_for('remove_league', player_id=current_user.id, chosen_league_id=league.id)}}'">Delete</a> </strong></td>
+                <td class="text-center"><strong><a class="btn btn-danger" role="button" onclick="window.location.href='{{url_for('leagues.remove_league', player_id=current_user.id, chosen_league_id=league.id)}}'">Delete</a> </strong></td>
                 {% endif %}
             </tr>
             {% endfor %}
             {% if current_user.is_admin %}
-            <form method="POST" action="{{ url_for('all_leagues') }}">
+            <form method="POST" action="{{ url_for('leagues.all_leagues') }}">
     {{ form.csrf_token }}
 
             <tr>

@@ -12,7 +12,7 @@
                     {% if player.teams_joined %}
                     {% for team in player.teams_joined %}
                     <h3>
-                        <a href="{{ url_for('team_page', chosen_league_id=team.parent_league.id, team_id=team.id) }}">
+                        <a href="{{ url_for('teams.team_page', chosen_league_id=team.parent_league.id, team_id=team.id) }}">
                             {{ team.name }}
                         </a>
                     </h3>

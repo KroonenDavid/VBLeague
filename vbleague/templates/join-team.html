@@ -19,7 +19,7 @@
                     <a class="nav-link" href="#">Fixtures</a>
                 </li>
                 <li class="nav-item">
-                    <a class="btn btn-primary" style="background-color: #F4922A" href="{{url_for('join_chosen_league', chosen_league_id=league.id)}}" role="button">Join</a>
+                    <a class="btn btn-primary" style="background-color: #F4922A" href="{{url_for('leagues.join_chosen_league', chosen_league_id=league.id)}}" role="button">Join</a>
                 </li>
             </ul>
         </div>
@@ -30,7 +30,7 @@
     <div class="row justify-content-start align-items-start vh-100">
         <div class="col-lg-6">
             <main class="form-signin">
-                <form method="POST" action="{{ url_for('join_chosen_team', chosen_league_id=league.id, team_id=team.id) }}" novalidate>
+                <form method="POST" action="{{ url_for('teams.join_chosen_team', chosen_league_id=league.id, team_id=team.id) }}" novalidate>
                     {{ render_form(form) }}
                 </form>
                 {% with messages = get_flashed_messages() %}

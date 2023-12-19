@@ -1,9 +1,11 @@
-from vbleague import db
 from flask_login import UserMixin
 from sqlalchemy.orm import relationship
 from itsdangerous import URLSafeTimedSerializer as Serializer
-from vbleague import app
-
+from vbleague import login_manager, db
+from flask import current_app
+@login_manager.user_loader
+def load_user(user_id):
+    return db.get_or_404(User, user_id)
 
 team_membership = db.Table(
     'team_membership',
@@ -36,12 +38,12 @@ class User(UserMixin, db.Model):
     profile_pic = db.Column(db.String(1000), nullable=False, default='Default_pfp.png')
 
     def get_reset_token(self):
-        s = Serializer(app.config['SECRET_KEY'])
+        s = Serializer(current_app.config['SECRET_KEY'])
         return s.dumps({'user_id': self.id})
 
     @staticmethod
     def verify_reset_token(token, expires_sec=1800):
-        s = Serializer(app.config['SECRET_KEY'])
+        s = Serializer(current_app.config['SECRET_KEY'])
         try:
             user_id = s.loads(token, max_age=expires_sec)['user_id']
         except:

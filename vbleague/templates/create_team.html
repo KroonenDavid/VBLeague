@@ -19,7 +19,7 @@
                     <a class="nav-link" href="#">Fixtures</a>
                 </li>
                 <li class="nav-item">
-                    <a class="btn btn-primary" style="background-color: #F4922A" href="{{url_for('join_chosen_league', chosen_league_id=league.id)}}" role="button">Join</a>
+                    <a class="btn btn-primary" style="background-color: #F4922A" href="{{url_for('leagues.join_chosen_league', chosen_league_id=league.id)}}" role="button">Join</a>
                 </li>
             </ul>
         </div>
@@ -31,7 +31,7 @@
         <div class="col-lg-6">
             <main class="form-signin">
                 <!-- Add enctype attribute to the form tag -->
-                <form method="POST" action="{{ url_for('create_team', chosen_league_id=league.id) }}" enctype="multipart/form-data" novalidate>
+                <form method="POST" action="{{ url_for('teams.create_team', chosen_league_id=league.id) }}" enctype="multipart/form-data" novalidate>
                     <!-- Render each field individually -->
                     <div class="mb-3">
                         <label for="name" class="form-label">Team Name</label>
