@@ -4,10 +4,12 @@ from flask_login import LoginManager
 from flask_bootstrap import Bootstrap5
 from flask_mail import Mail
 from vbleague.config import Config
+from flask_ckeditor import CKEditor
 
 db = SQLAlchemy()
 mail = Mail()
 bootstrap = Bootstrap5()
+ckeditor = CKEditor()
 
 login_manager = LoginManager()
 login_manager.login_view = 'users.login'
@@ -20,7 +22,7 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
     mail.init_app(app)
     bootstrap.init_app(app)
-
+    ckeditor.init_app(app)
 
     from vbleague.users.routes import users
     from vbleague.leagues.routes import leagues

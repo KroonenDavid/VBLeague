@@ -3,6 +3,15 @@ from sqlalchemy.orm import relationship
 from itsdangerous import URLSafeTimedSerializer as Serializer
 from vbleague import login_manager, db
 from flask import current_app
+
+default_bio = ('<h1><strong>Day at 00:00am-00:00pm</strong></h1>'
+               '<h1><span style="color:#e74c3c">Season start date: MM/DD/YYYY</span></h1>'
+               '<p><strong>Field Location:</strong><a href="http://127.0.0.1:5000/leagues/4">&nbsp;Location (with link to field)</a></p>'
+               '<p><strong>Team Size:</strong>&nbsp;11v11</p>'
+               '<p><strong>Field Type:</strong>&nbsp;Turf/Grass/Artificial</p>'
+               '<p><strong>Team minimum:</strong>&nbsp;11 players (3 Male or 3 Female).</p>'
+               '<p><strong>Season Format:</strong>&nbsp;8 Weeks of Regular Season + Playoffs</p>')
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.get_or_404(User, user_id)
@@ -62,7 +71,7 @@ class League(db.Model):
     division = db.Column(db.String(1000), nullable=False)
     team_size = db.Column(db.String(1000), nullable=False)
     maps_url = db.Column(db.String(1000), nullable=False)
-    bio = db.Column(db.Text)
+    bio = db.Column(db.Text, default=default_bio)
 
     teams = relationship("Team", back_populates="parent_league", cascade="all, delete-orphan")
 

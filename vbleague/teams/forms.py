@@ -23,5 +23,8 @@ class CreateTeamForm(FlaskForm):
     password = StringField('Password')
     logo = FileField('Logo', validators=[FileAllowed(['jpg', 'png', 'jpeg']), FileSizeLimit(max_size_in_mb=10)])
     submit = SubmitField(label="Create Team")
+class InvitePlayerForm(FlaskForm):
+    body = StringField('Invite Message', validators=[DataRequired()])
+    submit = SubmitField(label='Invite')
 
 

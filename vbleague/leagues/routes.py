@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask import render_template, request, url_for, redirect, flash
 from vbleague.models import League, Team
 from flask_login import login_required
-from vbleague.leagues.forms import CreateLeagueForm
+from vbleague.leagues.forms import CreateLeagueForm, LeagueForm
 from vbleague import db
 from vbleague.users.utils import email_must_be_confirmed
 from flask_login import current_user
@@ -55,6 +55,29 @@ def all_leagues():
 def user_chosen_league(chosen_league_id):
     league = db.get_or_404(League, chosen_league_id)
     return render_template('selected_league.html', league=league)
+
+@leagues.route("/leagues/<int:chosen_league_id>/edit", methods=['POST', 'GET'])
+def edit_league(chosen_league_id):
+    league = db.get_or_404(League, chosen_league_id)
+    form = LeagueForm()
+
+    if not current_user.is_admin:
+        return render_template('errors/403.html')
+
+    if form.validate_on_submit():
+        league.bio = form.bio.data
+
+        flash('Bio changed successfully!', 'success')
+
+        db.session.commit()
+
+        return redirect(url_for('leagues.user_chosen_league', chosen_league_id=league.id))
+    elif request.method == 'GET':
+        form.bio.data = league.bio
+
+    return render_template('edit_league.html', league=league, form=form)
+
+
 @leagues.route("/leagues/<int:chosen_league_id>/join")
 @login_required
 @email_must_be_confirmed

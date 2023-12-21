@@ -19,7 +19,7 @@
             <div class="ms-auto"> <!-- Use 'ms-auto' class to push the button to the right -->
               {% if current_user.id == team.captain_id %}
 
-                <a href="{{url_for('teams.free_agents', chosen_league_id=league.id)}}" class="btn btn-primary" role="button">
+                <a href="{{url_for('teams.free_agents', chosen_league_id=league.id, team_id=team.id)}}" class="btn btn-primary" role="button">
                     Free Agent List
                 </a>
             {% endif %}

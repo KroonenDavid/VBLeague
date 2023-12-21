@@ -24,14 +24,11 @@
 
 <div class="container">
     <div style="margin-top: 50px">
-        <h2>Saturdays at 9:00am-12:00pm</h2>
-        <h2 style="color: red;">Season start date: 1/13/2024</h2>
-        <p><strong>Field Location:</strong><a href="{{league.map_url}}"> Van Nuys Sherman Oaks - War Memorial Park</a>
-        </p>
-        <p><strong>Team Size:</strong> 8v8</p>
-        <p><strong>Field Type:</strong> Turf</p>
-        <p><strong>Team minimum:</strong> 11 players (3 Male or 3 Female).</p>
-        <p><strong>Season Format:</strong> 8 Weeks of Regular Season + Playoffs</p>
+        {{ league.bio | safe() }}
+        {% if current_user.is_admin %}
+        <a class="btn btn-primary"
+           href="{{url_for('leagues.edit_league', chosen_league_id=league.id)}}" role="button">Edit</a>
+        {% endif %}
         <a class="btn btn-primary" style="background-color: #F4922A"
            href="{{url_for('leagues.join_chosen_league', chosen_league_id=league.id)}}" role="button">Join</a>
 

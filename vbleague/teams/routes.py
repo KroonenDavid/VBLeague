@@ -1,9 +1,9 @@
 from flask import render_template, request, url_for, redirect, flash, Blueprint
 from vbleague.models import team_membership, User, League, Team
 from flask_login import login_required, current_user
-from vbleague.teams.forms import TeamLoginForm, CreateTeamForm
+from vbleague.teams.forms import TeamLoginForm, CreateTeamForm, InvitePlayerForm
 from vbleague import db
-from vbleague.users.utils import save_picture
+from vbleague.users.utils import save_picture, send_player_invite
 
 teams = Blueprint('teams', __name__)
 
@@ -20,10 +20,12 @@ def team_page(chosen_league_id, team_id):
 
     return render_template('team_page.html', league=league, team=team)
 
-@teams.route('/leagues/<int:chosen_league_id>/free-agents')
+@teams.route('/leagues/<int:chosen_league_id>/free-agents', methods=['GET'])
 def free_agents(chosen_league_id):
     league = db.get_or_404(League, chosen_league_id)
     free_agents_team = Team.query.filter_by(name="Free Agents", league_id=chosen_league_id).first()
+    team_id = request.args.get('team_id')
+    captain_team = db.get_or_404(Team, team_id)
 
     is_captain = any(
             db.session.query(Team)
@@ -32,7 +34,33 @@ def free_agents(chosen_league_id):
         )
 
     if is_captain:
-        return render_template('free_agents.html', league=league, team=free_agents_team)
+
+        return render_template('free_agents.html', league=league, team=free_agents_team, captain_team=captain_team)
+
+    else:
+        flash('Sorry you have to be a captain to see the free agent list.', 'warning')
+        return redirect(request.referrer)
+
+@teams.route("/invite-player/<int:player_id>", methods=['POST', 'GET'])
+def invite_player(player_id):
+    captain_team_id = request.args.get('captain_team_id')
+    captain_team = db.get_or_404(Team, captain_team_id)
+
+    form = InvitePlayerForm()
+    invited_player = db.get_or_404(User, player_id)
+
+    is_captain = any(
+        db.session.query(Team)
+        .filter(Team.captain_id == current_user.id)
+        .all()
+    )
+
+    if is_captain:
+        if form.validate_on_submit():
+            send_player_invite(captain_team, captain=current_user, invited_player=invited_player, msg_body=form.body.data)
+            flash(f'Successfully invited {invited_player.name}', 'success')
+            return redirect(url_for('teams.free_agents', team_id=captain_team_id, chosen_league_id=captain_team.parent_league.id))
+        return render_template('invite-player.html', captain_team=captain_team, invited_player=invited_player, form=form)
 
     else:
         flash('Sorry you have to be a captain to see the free agent list.', 'warning')
@@ -43,6 +71,12 @@ def free_agents(chosen_league_id):
 def join_chosen_team(chosen_league_id, team_id):
     league = db.get_or_404(League, chosen_league_id)
     team = db.get_or_404(Team, team_id)
+
+    free_agents_team = (
+        Team.query
+        .filter_by(name="Free Agents", league_id=chosen_league_id)
+        .first()
+    )
 
     team_login = TeamLoginForm()
 
@@ -55,6 +89,10 @@ def join_chosen_team(chosen_league_id, team_id):
 
         if password == team.password:
             flash(f'{team.name} joined successfully!', 'success')
+
+            if free_agents_team in current_user.teams_joined:
+                free_agents_team.players.remove(current_user)
+
             team.players.append(current_user)
             db.session.commit()
 
@@ -72,6 +110,12 @@ def create_team(chosen_league_id):
     team_form = CreateTeamForm()
     league = db.get_or_404(League, chosen_league_id)
 
+    free_agents_team = (
+        Team.query
+        .filter_by(name="Free Agents", league_id=chosen_league_id)
+        .first()
+    )
+
     if request.method == "POST":
 
         is_on_team = any(
@@ -79,6 +123,7 @@ def create_team(chosen_league_id):
             .filter(team_membership.c.user_id == current_user.id)
             .join(Team, Team.id == team_membership.c.team_id)
             .filter(Team.league_id == chosen_league_id)
+            .filter(Team.name != "Free Agents")
             .all()
         )
 
@@ -100,6 +145,9 @@ def create_team(chosen_league_id):
             password=team_form.password.data,
             captain_id=current_user.id,
         )
+
+        if free_agents_team in current_user.teams_joined:
+            free_agents_team.players.remove(current_user)
 
         if team_form.logo.data:
             picture_file = save_picture(team_form.logo.data)
@@ -136,6 +184,8 @@ def join_free_agents(chosen_league_id):
 
     free_agents_team.players.append(current_user)
     db.session.commit()
+    flash('Successfully joined the free agents! Wait to be invited to a team or contact a captain!',
+          'success')
 
     return redirect(url_for('teams.team_page', chosen_league_id=chosen_league_id, team_id=free_agents_team.id))
 @teams.route('/remove-player-from-team')
