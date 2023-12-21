@@ -5,38 +5,20 @@
 <div class="container" style="margin-top: 50px">
     <div class="col-12">
         <nav class="navbar navbar-expand-lg navbar-light">
-            <h1>{{ league.name}} - {{team.name}}
-                {% if current_user.id == team.captain_id %} - <a href="" data-bs-toggle="modal"
-                                                                 data-bs-target="#exampleModal">Disband Team</a> {%
-                endif %}
-            </h1>
+            <h1>{{ league.name}} - {{team.name}}</h1>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
-            <div class="ms-auto"> <!-- Use 'ms-auto' class to push the button to the right -->
-              {% if current_user.id == team.captain_id %}
-
-                <a href="{{url_for('teams.free_agents', chosen_league_id=league.id)}}" class="btn btn-primary" role="button">
-                    Free Agent List
-                </a>
-            {% endif %}
-            </div>
         </nav>
 
-        <h1>Players</h1>
         <ul>
             {% for player in team.players: %}
             <li><a href="{{ url_for('users.player_profile', player_id=player.id) }}">{{player.name}}</a>
-                {% if player.id == team.captain_id %} <strong>(Captain)</strong> {% endif %}
-                {% if player.id == current_user.id and current_user.id != team.captain_id %} - <a
-                        href="{{url_for('teams.remove_player_from_team', player_id=player.id, team_id=team.id, league_id=league.id)}}">Leave
-                    Team</a>{% endif %}
-                {% if current_user.id == team.captain_id and player.id != current_user.id %} - <a
-                        href="{{url_for('teams.remove_player_from_team', player_id=player.id, team_id=team.id, league_id=league.id)}}">Remove
-                    Player</a>{% endif %}
+                <a href="{{url_for('teams.free_agents', chosen_league_id=league.id)}}" class="btn btn-primary" role="button">
+                    Invite Player
+                </a>
             </li>
 
         </ul>

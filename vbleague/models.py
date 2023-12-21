@@ -26,6 +26,7 @@ class User(UserMixin, db.Model):
     gender = db.Column(db.String(100), nullable=False)
     bio = db.Column(db.String(1000), nullable=False, default="No bio yet!")
     is_admin = db.Column(db.Boolean, nullable=False, default=False)
+    email_confirmed = db.Column(db.Boolean, nullable=False, default=False)
 
     position = db.Column(db.String(100))
     matches_played = db.Column(db.Integer, nullable=False, default=0)

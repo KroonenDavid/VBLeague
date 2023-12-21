@@ -20,6 +20,24 @@ def team_page(chosen_league_id, team_id):
 
     return render_template('team_page.html', league=league, team=team)
 
+@teams.route('/leagues/<int:chosen_league_id>/free-agents')
+def free_agents(chosen_league_id):
+    league = db.get_or_404(League, chosen_league_id)
+    free_agents_team = Team.query.filter_by(name="Free Agents", league_id=chosen_league_id).first()
+
+    is_captain = any(
+            db.session.query(Team)
+            .filter(Team.captain_id == current_user.id)
+            .all()
+        )
+
+    if is_captain:
+        return render_template('free_agents.html', league=league, team=free_agents_team)
+
+    else:
+        flash('Sorry you have to be a captain to see the free agent list.', 'warning')
+        return redirect(request.referrer)
+
 @teams.route("/leagues/<int:chosen_league_id>/teams/<int:team_id>/join", methods=['POST', 'GET'])
 @login_required
 def join_chosen_team(chosen_league_id, team_id):
@@ -36,7 +54,7 @@ def join_chosen_team(chosen_league_id, team_id):
         password = team_login.password.data
 
         if password == team.password:
-
+            flash(f'{team.name} joined successfully!', 'success')
             team.players.append(current_user)
             db.session.commit()
 
@@ -65,13 +83,13 @@ def create_team(chosen_league_id):
         )
 
         if is_on_team:
-            flash('You are already on a team in this league.')
+            flash('You are already on a team in this league.', 'danger')
             return redirect(url_for('teams.create_team', chosen_league_id=chosen_league_id))
 
         existing_team = Team.query.filter_by(name=team_form.name.data, league_id=chosen_league_id).first()
 
         if existing_team:
-            flash('This team name is taken.')
+            flash('This team name is taken.', 'danger')
             return redirect(url_for('teams.create_team', chosen_league_id=chosen_league_id))
 
         new_team = Team(
@@ -88,6 +106,8 @@ def create_team(chosen_league_id):
             new_team.logo = picture_file
 
         new_team.players.append(current_user)
+
+        flash('Team created successfully!', 'success')
 
         db.session.add(new_team)
         db.session.commit()
@@ -111,7 +131,7 @@ def join_free_agents(chosen_league_id):
     )
 
     if is_on_team:
-        flash('You are already on the free agents team.')
+        flash('You are already on the free agents team.', 'warning')
         return redirect(url_for('users.my_profile'))
 
     free_agents_team.players.append(current_user)
@@ -129,7 +149,7 @@ def remove_player_from_team():
     team = db.get_or_404(Team, team_id)
 
     team.players.remove(player)
-    flash('Successfully left team.')
+    flash('Successfully left team.', 'info')
 
     db.session.commit()
     return redirect(request.referrer)
@@ -145,7 +165,7 @@ def remove_team():
     league = db.get_or_404(League, league_id)
 
     league.teams.remove(team)
-    flash('Successfully deleted team.')
+    flash('Successfully deleted team.', 'success')
 
     db.session.commit()
 

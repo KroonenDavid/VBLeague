@@ -29,9 +29,40 @@
                 <td>{{ league.team_size }}</td>
                 <td class="text-center"><strong><a class="btn" role="button" style="background-color:#F4922A"  href="{{url_for('leagues.user_chosen_league',chosen_league_id=league.id)}}">Join!</a> </strong></td>
                 {% if current_user.is_admin %}
-                <td class="text-center"><strong><a class="btn btn-danger" role="button" onclick="window.location.href='{{url_for('leagues.remove_league', player_id=current_user.id, chosen_league_id=league.id)}}'">Delete</a> </strong></td>
+
+                <td class="text-center"><strong> <a class="btn btn-danger" role="button" data-bs-toggle="modal" data-bs-target="#exampleModal-{{ league.id }}">Delete</a> </strong></td>
                 {% endif %}
             </tr>
+            <div class="modal fade" id="exampleModal-{{ league.id }}" tabindex="-1" role="dialog"
+                             aria-labelledby="exampleModalLabel"
+                             aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <!-- Modal content -->
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="exampleModalLabel">Delete {{league.name}}?</h5>
+                                        <button type="button" class="close"
+                                                onclick="window.location.href='{{ url_for('leagues.all_leagues') }}'"
+                                                data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Are you sure you want to <strong>delete {{league.name}}?</strong>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-danger" data-dismiss="modal"
+                                                onclick="window.location.href='{{url_for('leagues.remove_league', player_id=current_user.id, chosen_league_id=league.id)}}'">
+                                            Delete
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                                                onclick="window.location.href='{{ url_for('leagues.all_leagues') }}'">Close
+                                        </button>
+                                        <!-- Additional buttons if needed -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
             {% endfor %}
             {% if current_user.is_admin %}
             <form method="POST" action="{{ url_for('leagues.all_leagues') }}">

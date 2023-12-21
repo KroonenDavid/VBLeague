@@ -11,11 +11,21 @@
                     <h1>{{ player.name }}</h1>
                     {% if player.teams_joined %}
                     {% for team in player.teams_joined %}
+                    {% if team.name != "Free Agents" %}
                     <h3>
                         <a href="{{ url_for('teams.team_page', chosen_league_id=team.parent_league.id, team_id=team.id) }}">
                             {{ team.name }}
                         </a>
+                        - {{team.parent_league.name}}
                     </h3>
+                    {% else %}
+                    <h3>
+                        <a href="{{ url_for('teams.free_agents', chosen_league_id=team.parent_league.id) }}">
+                            {{ team.name }}
+                        </a>
+                        - {{team.parent_league.name}}
+                    </h3>
+                    {% endif %}
                     {% endfor %}
                     {% else %}
                     <h3>Not on any teams yet!</h3>

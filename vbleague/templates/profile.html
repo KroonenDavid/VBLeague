@@ -16,13 +16,16 @@
                             {{ team.name }}
                         </a>
                         - {{ team.parent_league.name }}
+
                         {% if current_user.id != team.captain_id %}
                         -
                         <a href="{{url_for('teams.remove_player_from_team', player_id=current_user.id, team_id=team.id, league_id=team.parent_league.id)}}">Leave
                             Team</a>
                         {% else %}
+                        {% if team.name != "Free Agents" %}
                         -
                         <a href="#" data-bs-toggle="modal" data-bs-target="#exampleModal">Disband Team</a>
+                        {% endif %}
                         <!------------ DISBAND TEAM MODAL -------------------->
 
                         <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog"
@@ -103,15 +106,6 @@
             </div>
         </div>
     </div>
-
-
-    {% with messages = get_flashed_messages() %}
-    {% if messages %}
-    {% for message in messages %}
-    <p style="color:red">{{ message }}</p>
-    {% endfor %}
-    {% endif %}
-    {% endwith %}
 
 
 </div>

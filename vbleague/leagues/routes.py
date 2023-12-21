@@ -4,6 +4,8 @@ from vbleague.models import League, Team
 from flask_login import login_required
 from vbleague.leagues.forms import CreateLeagueForm
 from vbleague import db
+from vbleague.users.utils import email_must_be_confirmed
+from flask_login import current_user
 
 leagues = Blueprint('leagues', __name__)
 
@@ -14,7 +16,11 @@ def all_leagues():
     create_league_form = CreateLeagueForm()
 
     if create_league_form.validate_on_submit():
-        # Make sure to add if statement to catch if league exists already
+        existing_league = League.query.filter_by(name=create_league_form.name.data).first()
+
+        if existing_league:
+            flash('This league name already exists', 'danger')
+            return redirect(url_for('leagues.all_leagues'))
 
         new_league = League(
             name=create_league_form.name.data,
@@ -36,6 +42,8 @@ def all_leagues():
             captain_id=1,
         )
 
+        flash('League added successfully', 'info')
+
         db.session.add(new_team)
         db.session.commit()
 
@@ -49,11 +57,13 @@ def user_chosen_league(chosen_league_id):
     return render_template('selected_league.html', league=league)
 @leagues.route("/leagues/<int:chosen_league_id>/join")
 @login_required
+@email_must_be_confirmed
 def join_chosen_league(chosen_league_id):
     league = db.get_or_404(League, chosen_league_id)
     return render_template('join.html', league=league)
 @leagues.route("/leagues/<int:chosen_league_id>/free-agent")
 @login_required
+@email_must_be_confirmed
 def join_chosen_league_free(chosen_league_id):
     league = db.get_or_404(League, chosen_league_id)
     return render_template('free-agent-join.html', league=league)
@@ -61,13 +71,16 @@ def join_chosen_league_free(chosen_league_id):
 @leagues.route('/remove-league')
 @login_required
 def remove_league():
-    league_id = request.args.get('chosen_league_id')
-    league = db.get_or_404(League, league_id)
+    if current_user.is_admin:
+        league_id = request.args.get('chosen_league_id')
+        league = db.get_or_404(League, league_id)
 
-    db.session.delete(league)
-    db.session.commit()
+        db.session.delete(league)
+        db.session.commit()
 
-    flash('League deleted successfully')
+        flash('League deleted successfully', 'info')
 
-    return redirect(url_for('leagues.all_leagues', league=league))
+        return redirect(url_for('leagues.all_leagues', league=league))
+    else:
+        return render_template('errors/403.html')
 

@@ -1,17 +1,15 @@
-from flask import render_template, request, url_for, redirect, flash, Blueprint, current_app
+from flask import render_template, request, url_for, redirect, flash, Blueprint, current_app, session
 from vbleague.models import User
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, login_required, current_user, logout_user
 import os
 from vbleague.users.forms import (RegisterForm, LoginForm, EditProfile,
-                            RequestResetForm, ResetPasswordForm)
+                                  RequestResetForm, ResetPasswordForm)
 from vbleague import db
-from vbleague.users.utils import save_picture, send_reset_email
-
-
-
+from vbleague.users.utils import save_picture, send_reset_email, send_email_confirm
 
 users = Blueprint('users', __name__)
+
 
 @users.route("/login", methods=["POST", "GET"])
 def login():
@@ -25,6 +23,7 @@ def login():
 
         if user and check_password_hash(user.password, password):
             login_user(user, remember=login_form.remember.data)
+            flash('Successfully logged-in', 'success')
 
             next_page = request.args.get('next')
 
@@ -56,16 +55,21 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
+        send_email_confirm(new_user)
         login_user(new_user)
 
         return redirect(url_for('users.my_profile'))
 
     return render_template('register.html', form=register_form)
 
+
 @users.route('/logout')
+@login_required
 def logout():
     logout_user()
+    flash('Successfully logged-out!', 'success')
     return redirect(url_for('main.home'))
+
 
 @users.route('/players/<int:player_id>')
 def player_profile(player_id):
@@ -80,6 +84,12 @@ def my_profile():
     edit_profile_form = EditProfile()
 
     if edit_profile_form.validate_on_submit():
+
+        if current_user.bio != edit_profile_form.bio.data or edit_profile_form.profile_pic.data:
+            print(current_user.profile_pic)
+            print(edit_profile_form.profile_pic.data)
+            flash('Profile updated!', 'success')
+
         current_user.bio = edit_profile_form.bio.data
 
         old_profile_pic = current_user.profile_pic
@@ -89,7 +99,8 @@ def my_profile():
             current_user.profile_pic = picture_file
 
             if old_profile_pic and old_profile_pic != 'Default_pfp.png':
-                old_profile_pic_path = os.path.join(current_app.root_path, 'static/images/profile_pics', old_profile_pic)
+                old_profile_pic_path = os.path.join(current_app.root_path, 'static/images/profile_pics',
+                                                    old_profile_pic)
                 if os.path.exists(old_profile_pic_path):
                     os.remove(old_profile_pic_path)
 
@@ -104,12 +115,13 @@ def my_profile():
 
     return render_template('profile.html', form=edit_profile_form, image_file=image_file)
 
+
 @users.route('/reset-password', methods=['GET', 'POST'])
 def reset_request():
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
 
-    form = RequestResetForm ()
+    form = RequestResetForm()
 
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
@@ -117,8 +129,8 @@ def reset_request():
         flash('An email has been sent with instructions to reset your password', 'info')
         return redirect(url_for('users.login'))
 
-
     return render_template('reset_request.html', form=form)
+
 
 @users.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_token(token):
@@ -143,3 +155,29 @@ def reset_token(token):
         return redirect(url_for('users.login'))
 
     return render_template('reset_token.html', form=form)
+
+@users.route('/confirm-email/<token>', methods=['GET'])
+def confirm_email_token(token):
+
+    user = User.verify_reset_token(token)
+    if user is None:
+        flash('That is an invalid or expired token', 'warning')
+        return redirect(url_for('main.home'))
+
+    if user.email_confirmed:
+        return redirect(url_for('main.home'))
+
+    flash('E-mail successfully confirmed', 'success')
+
+    user.email_confirmed = True
+    db.session.commit()
+
+    return redirect(url_for('main.home'))
+
+@users.route('/confirm-email', methods=['GET'])
+def send_confirm_email():
+    send_email_confirm(current_user)
+    flash('Confirmation email sent!','success')
+
+    session['prev_url'] = request.referrer
+    return redirect(session['prev_url']) or url_for('main.home')

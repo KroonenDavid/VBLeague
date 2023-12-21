@@ -6,6 +6,13 @@ from datetime import datetime, timedelta
 from vbleague.models import User
 
 def over_18_check(form, field):
+    '''
+    Uses datetime to get today's date and 18 years ago and checks against user's birthdate to
+    confirm if they are over 18.
+    :param form:
+    :param field:
+    :return:
+    '''
     birthdate = field.data
     today = datetime.now().date()
 
@@ -16,13 +23,24 @@ def over_18_check(form, field):
 
 
 def FileSizeLimit(max_size_in_mb):
+    '''
+    Sets maximum file size in MB
+    :param max_size_in_mb:
+    :return:
+    '''
     max_bytes = max_size_in_mb * 1024 * 1024
 
     def file_length_check(form, field):
-        if len(field.data.read()) > max_bytes:
-            raise ValidationError(f"File size must be less than {max_size_in_mb}MB")
-        field.data.seek(0)
-
+        '''
+        Checks to see if the file size of the file input is smaller than the max file size.
+        :param form:
+        :param field:
+        :return:
+        '''
+        if field.data:
+            if len(field.data.read()) > max_bytes:
+                raise ValidationError(f"File size must be less than {max_size_in_mb}MB")
+            field.data.seek(0)
     return file_length_check
 
 class RegisterForm(FlaskForm):
