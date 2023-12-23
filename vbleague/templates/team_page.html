@@ -6,72 +6,137 @@
     <div class="col-12">
         <nav class="navbar navbar-expand-lg navbar-light">
             <h1>{{ league.name}} - {{team.name}}
-                {% if current_user.id == team.captain_id %} - <a href="" data-bs-toggle="modal"
-                                                                 data-bs-target="#exampleModal">Disband Team</a> {%
+                {% if current_user.id == team.captain_id %} - <a data-bs-target="#exampleModal-{{team.id}}" data-bs-toggle="modal"
+                                                                 href="">Disband Team</a> {%
                 endif %}
             </h1>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"
+                    class="navbar-toggler"
+                    data-bs-target="#navbarNav" data-bs-toggle="collapse" type="button">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             <div class="ms-auto"> <!-- Use 'ms-auto' class to push the button to the right -->
-              {% if current_user.id == team.captain_id %}
+                {% if current_user.id == team.captain_id %}
 
-                <a href="{{url_for('teams.free_agents', chosen_league_id=league.id, team_id=team.id)}}" class="btn btn-primary" role="button">
+                <a class="btn btn-primary"
+                   href="{{url_for('teams.free_agents', chosen_league_id=league.id, team_id=team.id)}}" role="button">
                     Free Agent List
                 </a>
-            {% endif %}
+                {% endif %}
             </div>
         </nav>
+        <div class="container">
+            <div class="row">
+                <div class="col-4">
+                    <div class="card text-center">
+                        <div class="card-header">
+                            <h1>{{ team.name }} (0-0-0)</h1>
+                        </div>
+                        <div class="card-body">
+                            <img class="img-fluid" src="{{ image_file }}" style="max-width: 100%; height: auto;">
+                        </div>
 
-        <h1>Players</h1>
-        <ul>
-            {% for player in team.players: %}
-            <li><a href="{{ url_for('users.player_profile', player_id=player.id) }}">{{player.name}}</a>
-                {% if player.id == team.captain_id %} <strong>(Captain)</strong> {% endif %}
-                {% if player.id == current_user.id and current_user.id != team.captain_id %} - <a
-                        href="{{url_for('teams.remove_player_from_team', player_id=player.id, team_id=team.id, league_id=league.id)}}">Leave
-                    Team</a>{% endif %}
-                {% if current_user.id == team.captain_id and player.id != current_user.id %} - <a
-                        href="{{url_for('teams.remove_player_from_team', player_id=player.id, team_id=team.id, league_id=league.id)}}">Remove
-                    Player</a>{% endif %}
-            </li>
+                        <div class="card-footer text-body-secondary">
+                            {% if current_user.id == team.captain_id %}
 
-        </ul>
-    </div>
+                            <button class="btn btn-primary" style="margin-top: 20px" type="button" data-bs-target="#invite-link" data-bs-toggle="modal">Add Players</button>
+                            <button class="btn btn-primary" style="margin-top: 20px" type="button">View Free Agents
+                            </button>
 
+                            {% else %}
 
-    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <!-- Modal content -->
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Delete {{team.name}}?</h5>
-                    <button type="button" class="close" onclick="window.location.href='{{ url_for('users.my_profile') }}'"
-                            data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                            <button class="btn btn-primary" style="margin-top: 20px" type="button">Join Team</button>
+                            <br>
+                            <button class="btn btn-primary" style="margin-top: 20px; margin-bottom: 20px" type="button">
+                                Contact Captain
+                            </button>
+
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    Are you sure you want to <strong>delete {{team.name}}?</strong>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-dismiss="modal"
-                            onclick="window.location.href='{{url_for('teams.remove_team', player_id=current_user.id, team_id=team.id, league_id=team.parent_league.id)}}'">
-                        Delete
-                    </button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal"
-                            onclick="window.location.href='{{ url_for('users.my_profile') }}'">Close
-                    </button>
-                    <!-- Additional buttons if needed -->
+                <div class="col-6">
+                    <h1>Players</h1>
+                    <ul>
+                        {% for player in team.players: %}
+                        <li>
+                            <a href="{{ url_for('users.player_profile', player_id=player.id) }}">{{player.name}}</a>
+                            {% if player.id == team.captain_id %} <strong>(Captain)</strong> {% endif %}
+                            {% if player.id == current_user.id and current_user.id != team.captain_id %} - <a
+                                href="{{url_for('teams.remove_player_from_team', player_id=player.id, team_id=team.id, league_id=league.id)}}">Leave
+                            Team</a>{% endif %}
+                            {% if current_user.id == team.captain_id and player.id != current_user.id %} - <a
+                                href="{{url_for('teams.remove_player_from_team', player_id=player.id, team_id=team.id, league_id=league.id)}}">Remove
+                            Player</a>{% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
         </div>
+        {% for player in team.players: %}
+
+        <div aria-hidden="true" aria-labelledby="exampleModalLabel" class="modal fade" id="exampleModal-{{team.id}}" role="dialog"
+             tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <!-- Modal content -->
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Delete {{team.name}}?</h5>
+                        <button aria-label="Close" class="close"
+                                data-bs-dismiss="modal" type="button">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to <strong>delete {{team.name}}?</strong>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-danger" data-bs-dismiss="modal"
+                                onclick="window.location.href='{{url_for('teams.remove_team', player_id=current_user.id, team_id=team.id, league_id=team.parent_league.id)}}'"
+                                type="button">
+                            Delete
+                        </button>
+                        <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">
+                            Close
+                        </button>
+                        <!-- Additional buttons if needed -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div aria-hidden="true" aria-labelledby="invite-link-label" class="modal fade" id="invite-link" role="dialog"
+             tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <!-- Modal content -->
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="invite-link-label">Invite Player!</h5>
+                        <button aria-label="Close" class="close"
+                                data-bs-dismiss="modal" type="button">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Send this link to players for them to instantly join! (Expires after 30 minutes)
+                        <br>
+                        <a href="{{join_link}}">Join Link</a>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">
+                            Close
+                        </button>
+                        <!-- Additional buttons if needed -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
     </div>
-    {% endfor %}
 </div>
 
 {% endblock %}

@@ -99,3 +99,16 @@ class Team(db.Model):
     captain = relationship("User", foreign_keys=[captain_id])
 
     players = relationship("User", secondary=team_membership, backref="teams_joined")
+
+    def generate_join_token(self):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        return s.dumps({'team_id': self.id})
+
+    @staticmethod
+    def verify_join_token(token, expires_sec=1800):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            team_id = s.loads(token, max_age=expires_sec)['team_id']
+        except:
+            return None
+        return Team.query.get(team_id)

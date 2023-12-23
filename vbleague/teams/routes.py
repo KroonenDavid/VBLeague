@@ -18,7 +18,12 @@ def team_page(chosen_league_id, team_id):
     league = db.get_or_404(League, chosen_league_id)
     team = db.get_or_404(Team, team_id)
 
-    return render_template('team_page.html', league=league, team=team)
+    token = team.generate_join_token()
+    join_link = url_for("teams.confirm_join_link", token=token, _external=True, league_id=chosen_league_id, team_id=team_id)
+
+    image_file = url_for('static', filename=f'images/profile_pics/{team.logo}')
+
+    return render_template('team_page.html', league=league, team=team, image_file=image_file, join_link=join_link)
 
 @teams.route('/leagues/<int:chosen_league_id>/free-agents', methods=['GET'])
 def free_agents(chosen_league_id):
@@ -42,6 +47,7 @@ def free_agents(chosen_league_id):
         return redirect(request.referrer)
 
 @teams.route("/invite-player/<int:player_id>", methods=['POST', 'GET'])
+@login_required
 def invite_player(player_id):
     captain_team_id = request.args.get('captain_team_id')
     captain_team = db.get_or_404(Team, captain_team_id)
@@ -103,6 +109,7 @@ def join_chosen_team(chosen_league_id, team_id):
             return redirect(url_for('teams.join_chosen_team', chosen_league_id=chosen_league_id, team_id=team_id))
 
     return render_template('join-team.html', league=league, team=team, form=team_login)
+
 
 @teams.route("/leagues/<int:chosen_league_id>/create-team", methods=["POST", "GET"])
 @login_required
@@ -223,5 +230,29 @@ def remove_team():
         return redirect(url_for('users.my-profile'))
 
     return redirect(request.referrer)
+
+@teams.route('/leagues/<int:league_id>/teams/<int:team_id>/join/<token>', methods=['GET'])
+@login_required
+def confirm_join_link(league_id, team_id, token):
+
+    league = db.get_or_404(League, league_id)
+    team = Team.verify_join_token(token)
+    if team is None:
+        flash('That is an invalid or expired token', 'warning')
+        return redirect(url_for('main.home'))
+
+    if current_user in team.players:
+        flash('You are already on this team!', 'info')
+        return redirect(url_for('users.my_profile'))
+
+    flash(f'You joined {team.name} successfully!', 'success')
+
+    team.players.append(current_user)
+    db.session.commit()
+
+    return redirect(url_for('teams.team_page', team_id=team.id, chosen_league_id=league.id))
+
+
+
 
 

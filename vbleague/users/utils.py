@@ -88,13 +88,14 @@ def email_must_be_confirmed(function):
     return wrapper
 
 def send_player_invite(captain_team, captain, invited_player, msg_body):
+    token = captain_team.generate_join_token()
     msg = Message(f'VBLeague | {captain.name} has invited you to {captain_team.name}',
                   sender=os.getenv('EMAIL'),
                   recipients=[invited_player.email])
     msg.body = (f'Hey {invited_player.name}, {captain.name} has invited you to {captain_team.name}!\n\n'
                 f'"{msg_body}"\n\n'
-                f'If you want to join, click the link below! Password is {captain_team.password}\n'
-                f'{url_for("teams.join_chosen_team", chosen_league_id=captain_team.parent_league.id, team_id=captain_team.id, _external=True)}\n'
+                f'If you want to join, click the link below!\n'
+                f'{url_for("teams.confirm_join_link", token=token, _external=True, league_id=captain_team.parent_league.id, team_id=captain_team.id)}\n'
                 f'If you wish to contact the captain please email them at {captain.email}')
 
     mail.send(msg)
