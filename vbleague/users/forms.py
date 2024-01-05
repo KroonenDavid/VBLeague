@@ -50,6 +50,7 @@ class RegisterForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
     confirmed_password = PasswordField('Confirm Password',
                                        validators=[EqualTo('password', message="Passwords must match")])
+    position = SelectField('Position (this can be changed later)', choices=['GOALKEEPER', 'DEFENDER', 'MIDFIELDER', 'FORWARD'])
     shirt_size = SelectField('Shirt Size', choices=['S', 'M', 'L', 'XL', 'XXL'])
     gender = SelectField('Gender', choices=['Male', 'Female', 'Non-Binary'])
     submit = SubmitField(label="Register")
@@ -68,6 +69,7 @@ class LoginForm(FlaskForm):
 
 class EditProfile(FlaskForm):
     bio = StringField('Bio')
+    position = StringField('Position')
     profile_pic = FileField('Profile Pic',
                             validators=[FileAllowed(['jpg', 'png', 'jpeg']), FileSizeLimit(max_size_in_mb=10)])
     submit = SubmitField(label="Save Changes")

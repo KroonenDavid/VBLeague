@@ -107,3 +107,22 @@ def remove_league():
     else:
         return render_template('errors/403.html')
 
+
+@leagues.route("/leagues/<int:league_id>/standings")
+def standings(league_id):
+    teams = (Team.query.filter(Team.league_id == league_id)
+             .filter(Team.name != "Free Agents")
+             .order_by(Team.points.desc())
+             .order_by(Team.goal_difference.desc())
+             .all())
+    league = db.get_or_404(League, league_id)
+    return render_template('standings.html', teams=teams, index=0, league=league)
+#
+# @app.route("/leagues/<string:chosen_league>/<string:chosen_fixtures>")
+# def user_chosen_league_standings(chosen_league, chosen_fixtures):
+#     pass
+#
+# @app.route("/leagues/<string:chosen_league>/<string:chosen_stats>")
+# def user_chosen_stats_page(chosen_league, chosen_stats):
+#     pass
+#

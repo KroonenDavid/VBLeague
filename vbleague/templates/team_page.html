@@ -17,22 +17,13 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <div class="ms-auto"> <!-- Use 'ms-auto' class to push the button to the right -->
-                {% if current_user.id == team.captain_id %}
-
-                <a class="btn btn-primary"
-                   href="{{url_for('teams.free_agents', chosen_league_id=league.id, team_id=team.id)}}" role="button">
-                    Free Agent List
-                </a>
-                {% endif %}
-            </div>
         </nav>
         <div class="container">
             <div class="row">
                 <div class="col-4">
                     <div class="card text-center">
                         <div class="card-header">
-                            <h1>{{ team.name }} (0-0-0)</h1>
+                            <h1>{{ team.name }} ({{team.matches_won}}-{{team.matches_tied}}-{{team.matches_lost}})</h1>
                         </div>
                         <div class="card-body">
                             <img class="img-fluid" src="{{ image_file }}" style="max-width: 100%; height: auto;">
@@ -42,8 +33,10 @@
                             {% if current_user.id == team.captain_id %}
 
                             <button class="btn btn-primary" style="margin-top: 20px" type="button" data-bs-target="#invite-link" data-bs-toggle="modal">Add Players</button>
-                            <button class="btn btn-primary" style="margin-top: 20px" type="button">View Free Agents
-                            </button>
+                            <a class="btn btn-primary"
+                   href="{{url_for('teams.free_agents', chosen_league_id=league.id, team_id=team.id)}}" role="button">
+                    Free Agent List
+                </a>
 
                             {% else %}
 

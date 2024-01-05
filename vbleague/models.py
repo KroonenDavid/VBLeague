@@ -3,6 +3,9 @@ from sqlalchemy.orm import relationship
 from itsdangerous import URLSafeTimedSerializer as Serializer
 from vbleague import login_manager, db
 from flask import current_app
+from sqlalchemy.ext.hybrid import hybrid_property
+
+
 
 default_bio = ('<h1><strong>Day at 00:00am-00:00pm</strong></h1>'
                '<h1><span style="color:#e74c3c">Season start date: MM/DD/YYYY</span></h1>'
@@ -16,13 +19,20 @@ default_bio = ('<h1><strong>Day at 00:00am-00:00pm</strong></h1>'
 def load_user(user_id):
     return db.get_or_404(User, user_id)
 
+#ADD STATS HERE
 team_membership = db.Table(
     'team_membership',
     db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
-    db.Column('team_id', db.Integer, db.ForeignKey('teams.id'), primary_key=True)
+    db.Column('team_id', db.Integer, db.ForeignKey('teams.id'), primary_key=True),
+    db.Column('matches_played', db.Integer, default=0),
+    db.Column('goals_scored', db.Integer, default=0),
+    db.Column('assists', db.Integer, default=0),
+    db.Column('saves_made', db.Integer, default=0),
+    db.Column('goals_against', db.Integer, default=0),
 )
 
 
+#ALL STATS HERE SHOULD BE HYBRID PROPERTIES THAT ADD UP THE STATS ABOVE
 class User(UserMixin, db.Model):
     __tablename__ = "users"
 
@@ -38,7 +48,7 @@ class User(UserMixin, db.Model):
     email_confirmed = db.Column(db.Boolean, nullable=False, default=False)
 
     position = db.Column(db.String(100))
-    matches_played = db.Column(db.Integer, nullable=False, default=0)
+    # matches_played = db.Column(db.Integer, nullable=False, default=0)
     goals_scored = db.Column(db.Integer, nullable=False, default=0)
     assists = db.Column(db.Integer, nullable=False, default=0)
     shot_percentage = db.Column(db.Integer, nullable=False, default=0)
@@ -46,6 +56,25 @@ class User(UserMixin, db.Model):
     goals_against = db.Column(db.Integer, nullable=False, default=0)
     save_percentage = db.Column(db.Integer, nullable=False, default=0)
     profile_pic = db.Column(db.String(1000), nullable=False, default='Default_pfp.png')
+
+
+
+    # @hybrid_property
+    # def save_percentage(self):
+    #     try:
+    #         (self.saves_made) / (self.goals_against) * 100
+    #     except ZeroDivisionError:
+    #         return 100
+    #     else:
+    #         return (self.saves_made) / (self.goals_against) * 100
+
+    @hybrid_property
+    def matches_played(self):
+        teams = db.session.query(team_membership).filter_by(user_id=self.id).all()
+        total = [stats.matches_played for stats in teams]
+        return sum(total)
+
+
 
     def get_reset_token(self):
         s = Serializer(current_app.config['SECRET_KEY'])
@@ -60,6 +89,16 @@ class User(UserMixin, db.Model):
             return None
         return User.query.get(user_id)
 
+class Match(db.Model):
+    __tablename__ = "matches"
+    id = db.Column(db.Integer, primary_key=True)
+    home_team = db.Column(db.Integer, db.ForeignKey('teams.id'), primary_key=True)
+    home_team_score = db.Column(db.Integer, nullable=False, default=0)
+    away_team = db.Column(db.Integer, db.ForeignKey('teams.id'), primary_key=True)
+    away_team_score = db.Column(db.Integer, nullable=False, default=0)
+    date = db.Column(db.String, nullable=False, default='TBD')
+    field = db.Column(db.String, nullable=False, default='TBD')
+    highlights_link = db.Column(db.String, nullable=False, default='TBD')
 
 class League(db.Model):
     __tablename__ = "leagues"
@@ -85,7 +124,6 @@ class Team(db.Model):
     parent_league = relationship("League", back_populates="teams")
 
     name = db.Column(db.String(1000))
-    matches_played = db.Column(db.Integer, nullable=False, default=0)
     matches_won = db.Column(db.Integer, nullable=False, default=0)
     matches_lost = db.Column(db.Integer, nullable=False, default=0)
     matches_tied = db.Column(db.Integer, nullable=False, default=0)
@@ -95,10 +133,28 @@ class Team(db.Model):
     logo = db.Column(db.String(1000))
     password = db.Column(db.String(1000), nullable=False)
 
+
+
     captain_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     captain = relationship("User", foreign_keys=[captain_id])
 
     players = relationship("User", secondary=team_membership, backref="teams_joined")
+
+    @hybrid_property
+    def points(self):
+        return (self.matches_won*3) + (self.matches_tied)
+
+    @hybrid_property
+    def goal_difference(self):
+        return (self.goals_for - self.goals_against)
+
+    @hybrid_property
+    def matches_played(self):
+        return (self.matches_won + self.matches_tied + self.matches_lost)
+
+    def __repr__(self):
+        return f'{self.name}'
+
 
     def generate_join_token(self):
         s = Serializer(current_app.config['SECRET_KEY'])
@@ -112,3 +168,4 @@ class Team(db.Model):
         except:
             return None
         return Team.query.get(team_id)
+

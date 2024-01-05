@@ -69,6 +69,18 @@
             <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
                 <li><a href="{{url_for('main.home')}}" class="nav-link px-2 text-secondary">Home</a></li>
                 <li><a href="{{url_for('leagues.all_leagues')}}" class="nav-link px-2 text-white">Leagues</a></li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                       data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Stats & Tables
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="#">Standings</a>
+                        <a class="dropdown-item" href="#">Stats</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">Something else here</a>
+                    </div>
+                </li>
                 <li><a href="#" class="nav-link px-2 text-white">Stats & Tables</a></li>
                 <li><a href="#" class="nav-link px-2 text-white">Schedule</a></li>
             </ul>
@@ -98,7 +110,7 @@
 
     <ul class="list-group">
         <li class="list-group-item list-group-item-warning">Please confirm your e-mail address.
-        <br>
+            <br>
             Did not receive an e-mail? Click below:
             <a href="{{url_for('users.send_confirm_email') }}">Send e-mail.</a>
         </li>
@@ -106,16 +118,16 @@
 </div>
 {% endif %}
 <div class="container" style="margin-top: 20px">
-{% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                {% for category, message in messages %}
-                <div class="alert alert-{{category}}">
-                    {{ message }}
-                </div>
-                {% endfor %}
-                {% endif %}
-                {% endwith %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{category}}">
+        {{ message }}
     </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+</div>
 {% block content %} {% endblock %}
 {% block scripts %}
 <!-- Optional JavaScript -->

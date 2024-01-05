@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+<div class="container" >
+    <h1 style="margin: 50px;">{{ league.name}} - Standings</h1>
+    <div class="table-responsive" style="margin: 50px;">
+        <table class="table table-bordered">
+            <thead class="table" style="background-color: #82A8B5;color:white;">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Team</th>
+                <th scope="col">MP</th>
+                <th scope="col">Wins</th>
+                <th scope="col">Ties</th>
+                <th scope="col">Losses</th>
+                <th scope="col">GF</th>
+                <th scope="col">GA</th>
+                <th scope="col">GD</th>
+                <th scope="col">Points</th>
+            </tr>
+            </thead>
+            <tbody class="table-group-divider">
+            {% for team in teams %}
+
+            <tr>
+                <td>{{loop.index}}.</td>
+                <td><a href="{{url_for('teams.team_page', chosen_league_id=league.id, team_id=team.id)}}">
+                    {{ team.name }}</a></td>
+                <td>{{ team.matches_played}}</td>
+                <td>{{ team.matches_won}}</td>
+                <td>{{ team.matches_tied }}</td>
+                <td>{{ team.matches_lost }}</td>
+                <td>{{ team.goals_for }}</td>
+                <td>{{ team.goals_against }}</td>
+                <td>{{ team.goal_difference }}</td>
+                <td><strong>{{ team.points }}</strong></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

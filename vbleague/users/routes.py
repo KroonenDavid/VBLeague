@@ -1,5 +1,5 @@
 from flask import render_template, request, url_for, redirect, flash, Blueprint, current_app, session
-from vbleague.models import User
+from vbleague.models import User, team_membership, Team, League
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, login_required, current_user, logout_user
 import os
@@ -48,6 +48,7 @@ def register():
             email=register_form.email.data,
             birthdate=register_form.birthday.data,
             password=hash_and_salted_pass,
+            position=register_form.position.data,
             shirt_size=register_form.shirt_size.data,
             gender=register_form.gender.data,
         )
@@ -70,14 +71,15 @@ def logout():
     flash('Successfully logged-out!', 'success')
     return redirect(url_for('main.home'))
 
-
 @users.route('/players/<int:player_id>')
 def player_profile(player_id):
     player = db.get_or_404(User, player_id)
+    teams = db.session.query(team_membership).filter_by(user_id=player_id).all()
     image_file = url_for('static', filename=f'images/profile_pics/{player.profile_pic}')
-    return render_template('player-profile.html', player=player, image_file=image_file)
 
-
+    return render_template('player-profile.html', zip=zip(player.teams_joined, teams), player=player, image_file=image_file, teams=teams)
+#REMOVE THIS DUMBASS ROUTE PORT TO PLAYER_PROFILE,
+# SHOULD JUST BE IF player_id == current_user.id then edit_profile functions
 @users.route("/my-profile", methods=["POST", "GET"])
 @login_required
 def my_profile():
@@ -85,10 +87,14 @@ def my_profile():
 
     if edit_profile_form.validate_on_submit():
 
-        if current_user.bio != edit_profile_form.bio.data or edit_profile_form.profile_pic.data:
+        if (current_user.bio != edit_profile_form.bio.data or edit_profile_form.profile_pic.data
+                or current_user.position != edit_profile_form.profile_pic.data):
             print(current_user.profile_pic)
             print(edit_profile_form.profile_pic.data)
             flash('Profile updated!', 'success')
+
+
+        current_user.position = edit_profile_form.position.data
 
         current_user.bio = edit_profile_form.bio.data
 
