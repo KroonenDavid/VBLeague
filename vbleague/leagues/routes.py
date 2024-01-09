@@ -1,6 +1,6 @@
 from flask import Blueprint
 from flask import render_template, request, url_for, redirect, flash
-from vbleague.models import League, Team
+from vbleague.models import League, Team, Match
 from flask_login import login_required
 from vbleague.leagues.forms import CreateLeagueForm, LeagueForm
 from vbleague import db
@@ -116,13 +116,5 @@ def standings(league_id):
              .order_by(Team.goal_difference.desc())
              .all())
     league = db.get_or_404(League, league_id)
-    return render_template('standings.html', teams=teams, index=0, league=league)
-#
-# @app.route("/leagues/<string:chosen_league>/<string:chosen_fixtures>")
-# def user_chosen_league_standings(chosen_league, chosen_fixtures):
-#     pass
-#
-# @app.route("/leagues/<string:chosen_league>/<string:chosen_stats>")
-# def user_chosen_stats_page(chosen_league, chosen_stats):
-#     pass
-#
+    all_leagues = League.query.order_by(League.name).all()
+    return render_template('standings.html', teams=teams, league=league, all_leagues=all_leagues)

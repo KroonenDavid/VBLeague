@@ -4,6 +4,28 @@
 
 <div class="container" >
     <h1 style="margin: 50px;">{{ league.name}} - Standings</h1>
+
+    <div class="col-2 accordion" id="accordionFlushExample" style="margin: 50px">
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+          {{league.name}}
+      </button>
+    </h2>
+    <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+      <div class="accordion-body">
+          {% for specific_league in all_leagues %}
+          <ul style="">
+          <li style="list-style-type: none">
+              <a href="{{url_for('leagues.standings', league_id=specific_league.id)}}">{{specific_league.name}}</a>
+              </li>
+          </ul>
+          {% endfor %}
+      </div>
+    </div>
+  </div>
+  </div>
+
     <div class="table-responsive" style="margin: 50px;">
         <table class="table table-bordered">
             <thead class="table" style="background-color: #82A8B5;color:white;">

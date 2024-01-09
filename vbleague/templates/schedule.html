@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    .score-background {
+    border-radius: 5px;
+    color: white;
+    background-color: #F4922A; /* Set the background color */
+    padding: 2px 6px; /* Add padding for space around the scores */
+    display: inline-block; /* Ensure the background only covers the text width */
+    text-align: center; /* Center-align the text */
+}
+</style>
+<div class="container">
+    <h1 style="margin: 50px;">{{league.name}} - Schedule</h1>
+
+    <div class="col-2 accordion" id="accordionFlushExample" style="margin: 50px">
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+          {{league.name}}
+      </button>
+    </h2>
+    <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+      <div class="accordion-body">
+          {% for specific_league in all_leagues %}
+          <ul style="">
+          <li style="list-style-type: none">
+              <a href="{{url_for('matches.schedule', league_id=specific_league.id)}}">{{specific_league.name}}</a>
+              </li>
+          </ul>
+          {% endfor %}
+      </div>
+    </div>
+  </div>
+  </div>
+
+
+    <div class="table-responsive" style="margin: 50px">
+        <!-- This groups everything by the week attribute in scheduled matches then
+        loops through it that way so loop one is match week one and then for match in matches
+        are all the matches in week 1 etc -->
+           {% for match_week, matches in scheduled_matches|groupby('week') %}
+
+        <table class="table table-bordered">
+            <thead class="table" style="background-color: #82A8B5;color:white;">
+                <tr>
+                    <th>Match Week {{match_week}}
+                        {% for match in matches %}
+            {% if match.home_team == 'BYE' or match.away_team == 'BYE' %}
+             | Bye's:
+            {% endif %}
+            {% if match.home_team == 'BYE' %}{{match.away_team_info.name}}
+            {% elif match.away_team == 'BYE' %}{{match.home_team_info.name}}
+            {% endif %}
+            {% endfor %}</th>
+                    <th>Date</th>
+                    <th>Field</th>
+                    <th>Highlights</th>
+                    {% if current_user.is_admin %}
+                    <th></th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for match in matches %}
+                {% if match.home_team != 'BYE' and match.away_team != 'BYE' %}
+                    <tr>
+                        <td>
+                            <div style="display: flex; justify-content: start;">
+                                <div style="min-width: 20ch; text-align: right; margin-right: 5px"><strong><a style='text-decoration: none; color: inherit;' href="{{url_for('teams.team_page', chosen_league_id=league.id, team_id=match.home_team)}}">{{ match.home_team_info.name }}</a></strong></div>
+                                <div class="score-background"><strong>{{ match.home_team_score }} - {{ match.away_team_score }}</strong></div>
+                                <div style="min-width: 20ch; text-align: left; margin-left: 5px"><strong><a style='text-decoration: none; color: inherit;' href="{{url_for('teams.team_page', chosen_league_id=league.id, team_id=match.away_team)}}">{{ match.away_team_info.name }}</a></strong></div>
+                            </div>
+
+                        </td>
+                        <td>{{ match.date }}</td>
+                        <td>{{ match.field }}</td>
+                        <td>{{ match.highlights_link }}</td>
+                        {% if current_user.is_admin %}
+                    <td style="display: flex; justify-content: center;"><a class="btn" role="button" aria-disabled="true" style="background: #F4922A; ">Add Info</a></td>
+                    {% endif %}
+                    </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

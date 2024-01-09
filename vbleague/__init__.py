@@ -28,16 +28,18 @@ def create_app(config_class=Config):
     from vbleague.leagues.routes import leagues
     from vbleague.teams.routes import teams
     from vbleague.main.routes import main
+    from vbleague.matches.routes import matches
     from vbleague.errors.handlers import errors
 
     app.register_blueprint(users)
     app.register_blueprint(leagues)
     app.register_blueprint(teams)
     app.register_blueprint(main)
+    app.register_blueprint(matches)
     app.register_blueprint(errors)
 
-    # with app.app_context():
-    #     db.create_all()
+    with app.app_context():
+        db.create_all()
 
     return app
 
