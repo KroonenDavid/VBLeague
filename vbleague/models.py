@@ -122,9 +122,11 @@ class Match(db.Model):
     away_team = db.Column(db.Integer, db.ForeignKey('teams.id'))
     away_team_score = db.Column(db.Integer, nullable=False, default=0)
     date = db.Column(db.String, nullable=False, default='TBD')
+    time = db.Column(db.String, nullable=False, default='TBD')
     field = db.Column(db.String, nullable=False, default='TBD')
     week = db.Column(db.Integer, nullable=False, default=0)
     highlights_link = db.Column(db.String, nullable=False, default='TBD')
+    been_played = db.Column(db.Boolean, nullable=False, default=0)
 
     home_team_info = relationship('Team', foreign_keys=[home_team])
     away_team_info = relationship('Team', foreign_keys=[away_team])

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from 'bootstrap5/form.html' import render_form %}
+{% block content %}
+
+
+<div class="container" style="margin-top: 50px">
+    <div class="col-12">
+        <h1>{{teams[0].name}} vs {{teams[1].name}} - Match Info
+        </h1>
+        <br>
+        <br>
+        <h2>Pre-Match Info</h2>
+        <br>
+        <form action="{{ url_for('matches.match_info', league_id=league.id, match_id=match.id) }}" method="POST">
+            {{ pre_match_form.csrf_token }}
+            <p>
+                <strong>Field:</strong> {{pre_match_form.field}}
+                <br>
+                <br>
+                <strong>Date:</strong> {{pre_match_form.date}}
+                <br>
+                <br>
+                <strong>Time:</strong> {{pre_match_form.time}}
+            </p>
+            {{ pre_match_form.submit }}
+        </form>
+
+        <br>
+        <br>
+        <h2>Post-Match Info</h2>
+        <br>
+
+        <form action="{{ url_for('matches.match_info', league_id=league.id, match_id=match.id) }}" method="POST">
+            {{ post_match_form.csrf_token }}
+            <p>
+                <strong>{{teams[0].name}}</strong> {{ post_match_form.home_team_score }} - {{
+                post_match_form.away_team_score }} <strong>{{teams[1].name}}</strong>
+            </p>
+
+            {{ post_match_form.submit }}
+        </form>
+        <br>
+        <br>
+
+        <form action="{{ url_for('matches.match_info', league_id=league.id, match_id=match.id) }}" method="POST">
+            {{ highlights_link_form.csrf_token }}
+            <p>
+                <strong>Highlights Link:</strong> {{highlights_link_form.highlights_link}}
+            </p>
+            {{ highlights_link_form.submit }}
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}

@@ -47,6 +47,9 @@
                 <tr>
                     <th>Match Week {{match_week}}
                         {% for match in matches %}
+                        {% if loop.index == 1 and match.away_team != 'BYE' and match.home_team != 'BYE' %} <!-- To get the date from the first match in the week -->
+            ({{ match.date }}) <!-- Displaying the date here -->
+        {% endif %}
             {% if match.home_team == 'BYE' or match.away_team == 'BYE' %}
              | Bye's:
             {% endif %}
@@ -54,7 +57,6 @@
             {% elif match.away_team == 'BYE' %}{{match.home_team_info.name}}
             {% endif %}
             {% endfor %}</th>
-                    <th>Date</th>
                     <th>Field</th>
                     <th>Highlights</th>
                     {% if current_user.is_admin %}
@@ -69,16 +71,19 @@
                         <td>
                             <div style="display: flex; justify-content: start;">
                                 <div style="min-width: 20ch; text-align: right; margin-right: 5px"><strong><a style='text-decoration: none; color: inherit;' href="{{url_for('teams.team_page', chosen_league_id=league.id, team_id=match.home_team)}}">{{ match.home_team_info.name }}</a></strong></div>
+                                {% if not match.been_played %}
+                                <div class="score-background"><strong>{{match.time}}</strong></div>
+                                {% else %}
                                 <div class="score-background"><strong>{{ match.home_team_score }} - {{ match.away_team_score }}</strong></div>
+                                {% endif %}
                                 <div style="min-width: 20ch; text-align: left; margin-left: 5px"><strong><a style='text-decoration: none; color: inherit;' href="{{url_for('teams.team_page', chosen_league_id=league.id, team_id=match.away_team)}}">{{ match.away_team_info.name }}</a></strong></div>
                             </div>
 
                         </td>
-                        <td>{{ match.date }}</td>
                         <td>{{ match.field }}</td>
                         <td>{{ match.highlights_link }}</td>
                         {% if current_user.is_admin %}
-                    <td style="display: flex; justify-content: center;"><a class="btn" role="button" aria-disabled="true" style="background: #F4922A; ">Add Info</a></td>
+                    <td style="display: flex; justify-content: center;"><a href="{{url_for('matches.match_info', league_id=league.id, match_id=match.id)}}" class="btn" role="button" aria-disabled="true" style="background: #F4922A; ">Add Info</a></td>
                     {% endif %}
                     </tr>
                 {% endif %}

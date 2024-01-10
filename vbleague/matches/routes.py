@@ -3,10 +3,12 @@ from flask import render_template, request, url_for, redirect, flash
 from vbleague.models import League, Team, Match
 from flask_login import login_required
 from vbleague.leagues.forms import CreateLeagueForm, LeagueForm
+from vbleague.matches.forms import PreMatchInfoForm, PostMatchInfoForm, HighlightsForm
 from vbleague import db
-from vbleague.users.utils import email_must_be_confirmed
+from vbleague.users.utils import email_must_be_confirmed, must_be_admin
 from vbleague.matches.utils import generate_schedule
 from flask_login import current_user
+from sqlalchemy import or_
 
 matches = Blueprint('matches', __name__)
 
@@ -26,6 +28,7 @@ def schedule(league_id):
 
 
 @matches.route('/leagues/<int:league_id>/generate-season')
+@must_be_admin
 def generate_season(league_id):
     Match.query.filter_by(league_id=league_id).delete()
     db.session.commit()
@@ -73,3 +76,121 @@ def generate_season(league_id):
     flash('Schedule successfully generated!', 'success')
 
     return redirect(url_for('matches.schedule', league_id=league.id))
+
+@matches.route('/leagues/<int:league_id>/matches/<int:match_id>/info', methods=['GET', 'POST'])
+@must_be_admin
+def match_info(league_id, match_id):
+    league = db.get_or_404(League, league_id)
+    match = db.get_or_404(Match, match_id)
+    teams = Team.query.filter(or_(Team.id == match.home_team, Team.id == match.away_team)).all()
+
+    pre_match_form = PreMatchInfoForm()
+    post_match_form = PostMatchInfoForm()
+    highlights_link_form = HighlightsForm()
+
+    if pre_match_form.validate_on_submit():
+        match.date = pre_match_form.date.data
+        match.time = pre_match_form.time.data
+        match.field = pre_match_form.field.data
+
+        flash('Pre-match info successfully submitted!', 'success')
+
+        db.session.commit()
+
+        return redirect(url_for('matches.schedule', league_id=league.id))
+
+    if post_match_form.validate_on_submit():
+        initial_away_score = match.away_team_score
+        initial_home_score = match.home_team_score
+
+        if not match.been_played:
+            if int(post_match_form.home_team_score.data) > int(post_match_form.away_team_score.data):
+                match.home_team_info.matches_won += 1
+                match.away_team_info.matches_lost += 1
+
+            elif int(post_match_form.home_team_score.data) < int(post_match_form.away_team_score.data):
+                match.home_team_info.matches_lost += 1
+                match.away_team_info.matches_won += 1
+
+            else:
+                match.home_team_info.matches_tied += 1
+                match.away_team_info.matches_tied += 1
+
+        else:
+            match.home_team_info.goals_for -= initial_home_score
+            match.home_team_info.goals_against -= initial_away_score
+
+            match.away_team_info.goals_for -= initial_away_score
+            match.away_team_info.goals_against -= initial_home_score
+
+            if initial_home_score > initial_away_score and int(post_match_form.home_team_score.data) < int(post_match_form.away_team_score.data):
+                match.home_team_info.matches_won -= 1
+                match.away_team_info.matches_lost -= 1
+
+                match.away_team_info.matches_won += 1
+                match.home_team_info.matches_lost += 1
+
+            elif initial_home_score < initial_away_score and int(post_match_form.home_team_score.data) > int(post_match_form.away_team_score.data):
+                match.away_team_info.matches_won -= 1
+                match.home_team_info.matches_lost -= 1
+
+                match.home_team_info.matches_won += 1
+                match.away_team_info.matches_lost += 1
+
+            elif initial_home_score > initial_away_score and int(post_match_form.home_team_score.data) == int(post_match_form.away_team_score.data):
+                match.home_team_info.matches_won -= 1
+                match.away_team_info.matches_lost -= 1
+
+                match.home_team_info.matches_tied += 1
+                match.away_team_info.matches_tied += 1
+
+            elif initial_home_score < initial_away_score and int(post_match_form.home_team_score.data) == int(post_match_form.away_team_score.data):
+                match.away_team_info.matches_won -= 1
+                match.home_team_info.matches_lost -= 1
+
+                match.home_team_info.matches_tied += 1
+                match.away_team_info.matches_tied += 1
+
+            elif initial_home_score == initial_away_score and int(post_match_form.home_team_score.data) < int(post_match_form.away_team_score.data):
+                match.away_team_info.matches_tied -= 1
+                match.home_team_info.matches_tied -= 1
+
+                match.home_team_info.matches_lost += 1
+                match.away_team_info.matches_won += 1
+
+            elif initial_home_score == initial_away_score and int(post_match_form.home_team_score.data) > int(
+                    post_match_form.away_team_score.data):
+                match.away_team_info.matches_tied -= 1
+                match.home_team_info.matches_tied -= 1
+
+                match.away_team_info.matches_lost += 1
+                match.home_team_info.matches_won += 1
+
+
+        match.away_team_score = post_match_form.away_team_score.data
+        match.home_team_score = post_match_form.home_team_score.data
+
+        match.home_team_info.goals_for += int(post_match_form.home_team_score.data)
+        match.home_team_info.goals_against += int(post_match_form.away_team_score.data)
+
+        match.away_team_info.goals_for += int(post_match_form.away_team_score.data)
+        match.away_team_info.goals_against += int(post_match_form.home_team_score.data)
+
+        match.been_played = True
+
+        flash('Scores successfully submitted!', 'success')
+
+        db.session.commit()
+
+        return redirect(url_for('matches.schedule', league_id=league.id))
+
+    if highlights_link_form.validate_on_submit():
+        match.highlights_link = highlights_link_form.highlights_link.data
+
+        flash('Highlights link successfully submitted!', 'success')
+
+        db.session.commit()
+
+
+    return render_template('match_info.html', league=league, match=match, teams=teams, pre_match_form=pre_match_form, post_match_form=post_match_form, highlights_link_form=highlights_link_form)
+

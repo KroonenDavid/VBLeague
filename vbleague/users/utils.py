@@ -4,9 +4,10 @@ from vbleague import mail
 import secrets
 from PIL import Image
 from flask_mail import Message
-from flask import current_app, redirect, flash
+from flask import current_app, redirect, flash, render_template
 from functools import wraps
 from flask_login import current_user
+
 
 
 def save_picture(form_picture):
@@ -87,6 +88,21 @@ def email_must_be_confirmed(function):
 
     return wrapper
 
+def must_be_admin(function):
+    '''
+    Admin Confirmation Function\n
+    Checks to see if user is admin. If not they receive a 403 error.
+    :param function:
+    :return: error_403:
+    '''
+
+    @wraps(function)
+    def wrapper(*args, **kwargs):
+        if not current_user.is_admin:
+            return render_template('errors/403.html'), 403
+        return function(*args, **kwargs)
+
+    return wrapper
 def send_player_invite(captain_team, captain, invited_player, msg_body):
     token = captain_team.generate_join_token()
     msg = Message(f'VBLeague | {captain.name} has invited you to {captain_team.name}',

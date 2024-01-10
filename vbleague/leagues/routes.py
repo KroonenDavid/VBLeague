@@ -4,7 +4,7 @@ from vbleague.models import League, Team, Match
 from flask_login import login_required
 from vbleague.leagues.forms import CreateLeagueForm, LeagueForm
 from vbleague import db
-from vbleague.users.utils import email_must_be_confirmed
+from vbleague.users.utils import email_must_be_confirmed, must_be_admin
 from flask_login import current_user
 
 leagues = Blueprint('leagues', __name__)
@@ -57,6 +57,8 @@ def user_chosen_league(chosen_league_id):
     return render_template('selected_league.html', league=league)
 
 @leagues.route("/leagues/<int:chosen_league_id>/edit", methods=['POST', 'GET'])
+@login_required
+@must_be_admin
 def edit_league(chosen_league_id):
     league = db.get_or_404(League, chosen_league_id)
     form = LeagueForm()
@@ -93,6 +95,7 @@ def join_chosen_league_free(chosen_league_id):
 
 @leagues.route('/remove-league')
 @login_required
+@must_be_admin
 def remove_league():
     if current_user.is_admin:
         league_id = request.args.get('chosen_league_id')
