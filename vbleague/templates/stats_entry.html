@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% from 'bootstrap5/form.html' import render_form %}
+{% block content %}
+
+
+<div class="container" style="margin-top: 50px">
+    <div class="col-12">
+        <h1>{{match.home_team_info.name}} - {{match.away_team_info.name}} - {{player.name}} - Stats
+        </h1>
+        {{render_form(form)}}
+    </div>
+</div>
+{% endblock %}

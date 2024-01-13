@@ -14,7 +14,7 @@
                     <h1>{{ player.name }} ({{player.position}})</h1>
                 </div>
                 <div class="card-body">
-                    <img src="{{ image_file }}" class="img-fluid" style="max-width: 100%; height: auto;">
+                    <img class="img-fluid" src="{{ image_file }}" style="max-width: 100%; height: auto;">
                 </div>
                 <div class="card-footer text-body-secondary">
                     <p><strong>Email:</strong> {{player.email }}</p>
@@ -22,12 +22,42 @@
                 </div>
             </div>
         </div>
+        <div class="col-8">
+            <h1 style="margin-left: 50px">Stats</h1>
+            <div class="table-responsive" style="margin: 50px;">
+                <table class="table table-bordered">
+                    <thead class="table" style="background-color: #82A8B5;color:white;">
+                    <tr>
+                        <th scope="col">MP</th>
+                        <th scope="col">Goals Scored</th>
+                        <th scope="col">Assists</th>
+                        <th scope="col">Shot%</th>
+                        <th scope="col">Saves Made</th>
+                        <th scope="col">Goals Against</th>
+                        <th scope="col">Save%</th>
+                    </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                    <tr>
+                        <td>{{player.matches_played}}</td>
+                        <td>{{player.goals_scored}}</td>
+                        <td>{{player.assists}}</td>
+                        <td>{{player.shot_percentage}}</td>
+                        <td>{{player.saves_made}}</td>
+                        <td>{{player.goals_against}}</td>
+                        <td>{{player.save_percentage}}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
             <div class="col-8">
-                <h1 style="margin-left: 50px">Stats</h1>
+                <h1 style="margin-left: 50px">Teams</h1>
                 <div class="table-responsive" style="margin: 50px;">
                     <table class="table table-bordered">
                         <thead class="table" style="background-color: #82A8B5;color:white;">
                         <tr>
+                            <th scope="col">Team</th>
+                            <th scope="col">Division</th>
                             <th scope="col">MP</th>
                             <th scope="col">Goals Scored</th>
                             <th scope="col">Assists</th>
@@ -38,82 +68,56 @@
                         </tr>
                         </thead>
                         <tbody class="table-group-divider">
+                        {% if player.teams %}
+                        {% for team in player.teams %}
+                        <h2>{{ team.name }}</h2>
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Matches Played</th>
+                                <th>Goals Scored</th>
+                                <th>Assists</th>
+                                <th>Shot Percentage</th>
+                                <th>Saves Made</th>
+                                <th>Goals Against</th>
+                                <th>Save Percentage</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <!-- Add logic to find the correct player_for_team based on team and player -->
+                            <tr>
+                                <td>placeholder</td>
+                                <td>placeholder</td>
+                                <td>placeholder</td>
+                                <td>{placeholder</td>
+                                <td>placeholder</td>
+                                <td>placeholder</td>
+                                <td>placeholder</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        {% endfor %}
+                        {% else %}
+                        <p>Not on any teams yet!</p>
+                        {% endif %}
+
+                        </tr>
+                        </tbody>
+                        <tbody class="table-group-divider">
                         <tr>
-                            <td>{{player.matches_played}}</td>
-                            <td>{{player.goals_scored}}</td>
-                            <td>{{player.assists}}</td>
-                            <td>{{player.shot_percentage}}</td>
-                            <td>{{player.saves_made}}</td>
-                            <td>{{player.goals_against}}</td>
-                            <td>{{player.save_percentage}}</td>
+                            <td>
+                                placeholder
+                                </a>
+                            </td>
+                            <td>
+                            </td>
+
+                            <td>placeholder</td>
+
                         </tr>
                         </tbody>
                     </table>
                 </div>
-                <div class="col-8">
-                    <h1 style="margin-left: 50px">Teams</h1>
-                    <div class="table-responsive" style="margin: 50px;">
-                        <table class="table table-bordered">
-                            <thead class="table" style="background-color: #82A8B5;color:white;">
-                            <tr>
-                                <th scope="col">Team</th>
-                                <th scope="col">Division</th>
-                                <th scope="col">MP</th>
-                                <th scope="col">Goals Scored</th>
-                                <th scope="col">Assists</th>
-                                <th scope="col">Shot%</th>
-                                <th scope="col">Saves Made</th>
-                                <th scope="col">Goals Against</th>
-                                <th scope="col">Save%</th>
-                            </tr>
-                            </thead>
-                            <tbody class="table-group-divider">
-                            {% if player.teams_joined %}
-                                    {% for team, player_for_team in zip %}
-                            <tr>
-
-                                        {% if team.name != "Free Agents" %}
-                                <td>
-                                    <a href="{{ url_for('teams.team_page', chosen_league_id=team.parent_league.id, team_id=team.id) }}">
-                                        {{ team.name }}
-                                    </a>
-                                </td>
-                                <td>
-                                    {{team.parent_league.name}}
-                                </td>
-                                        {% endif %}
-
-                                <td>{{player_for_team.matches_played}}</td>
-                                <td>{{player_for_team.goals_scored}}</td>
-                                <td>{{player_for_team.assists}}</td>
-                                <td>{{player.shot_percentage}}</td>
-                                <td>{{player_for_team.saves_made}}</td>
-                                <td>{{player_for_team.goals_against}}</td>
-                                <td>{{player.save_percentage}}</td>
-                                {% endfor %}
-                                {% else %}
-                                <td>Not on any teams yet!</td>
-                                {% endif %}
-
-                            </tr>
-                            </tbody>
-                            <tbody class="table-group-divider">
-                                    {% for team_player, team in zip %}
-                            <tr>
-                                <td>
-                                        {{ team_player.name }}
-                                    </a>
-                                </td>
-                                <td>
-                                </td>
-
-                                <td>{{team.matches_played}}</td>
-                                {% endfor %}
-
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
 
             </div>
         </div>

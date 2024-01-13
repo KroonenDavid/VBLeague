@@ -77,7 +77,7 @@ def player_profile(player_id):
     teams = db.session.query(team_membership).filter_by(user_id=player_id).all()
     image_file = url_for('static', filename=f'images/profile_pics/{player.profile_pic}')
 
-    return render_template('player-profile.html', zip=zip(player.teams_joined, teams), player=player, image_file=image_file, teams=teams)
+    return render_template('player-profile.html', player=player, image_file=image_file, teams=teams)
 #REMOVE THIS DUMBASS ROUTE PORT TO PLAYER_PROFILE,
 # SHOULD JUST BE IF player_id == current_user.id then edit_profile functions
 @users.route("/my-profile", methods=["POST", "GET"])

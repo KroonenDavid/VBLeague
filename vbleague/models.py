@@ -24,29 +24,31 @@ team_membership = db.Table(
     'team_membership',
     db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
     db.Column('team_id', db.Integer, db.ForeignKey('teams.id'), primary_key=True),
-    #These should be the total based on the stats within their matches
-    db.Column('matches_played', db.Integer, default=0),
-    db.Column('goals_scored', db.Integer, default=0),
-    db.Column('assists', db.Integer, default=0),
-    db.Column('saves_made', db.Integer, default=0),
-    db.Column('goals_against', db.Integer, default=0),
 )
 
-match_stats = db.Table(
-    'match_stats',
+match_membership = db.Table(
+    'match_membership',
     db.Column('match_id', db.Integer, db.ForeignKey('matches.id'), primary_key=True),
-    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
-
-    db.Column('matches_played', db.Integer, default=0),
-    db.Column('goals_scored', db.Integer, default=0),
-    db.Column('assists', db.Integer, default=0),
-    db.Column('saves_made', db.Integer, default=0),
-    db.Column('goals_against', db.Integer, default=0),
-
+    db.Column('team_id', db.Integer, db.ForeignKey('teams.id'), nullable=False),
 )
 
+class PlayerStats(db.Model):
+    __tablename__ = "player_stats"
 
-#ALL STATS HERE SHOULD BE HYBRID PROPERTIES THAT ADD UP THE STATS ABOVE
+    id = db.Column(db.Integer, primary_key=True)
+    match_id = db.Column(db.Integer, db.ForeignKey('matches.id'), nullable=False)
+    team_id = db.Column(db.Integer, db.ForeignKey('teams.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    match_played = db.Column(db.Boolean, default=False)
+    goals_scored = db.Column(db.Integer, default=0)
+    assists = db.Column(db.Integer, default=0)
+    saves_made = db.Column(db.Integer, default=0)
+    goals_against = db.Column(db.Integer, default=0)
+
+    match = relationship('Match', back_populates='player_stats')
+    team = relationship('Team', back_populates='stats')
+    user = relationship('User', back_populates='stats')
+
 class User(UserMixin, db.Model):
     __tablename__ = "users"
 
@@ -62,41 +64,29 @@ class User(UserMixin, db.Model):
     email_confirmed = db.Column(db.Boolean, nullable=False, default=False)
 
     position = db.Column(db.String(100))
-    shot_percentage = db.Column(db.Integer, nullable=False, default=0)
-    saves_made = db.Column(db.Integer, nullable=False, default=0)
-    goals_against = db.Column(db.Integer, nullable=False, default=0)
-    save_percentage = db.Column(db.Integer, nullable=False, default=0)
     profile_pic = db.Column(db.String(1000), nullable=False, default='Default_pfp.png')
 
+    teams = relationship("Team", secondary=team_membership, backref="team_players")
+    stats = relationship('PlayerStats', back_populates='user')
 
-
+    # @hybrid_property
+    # def matches_played(self):
+    #     return sum(stat.matches_played for stat in self.player_team_stats)
+    #
+    # @hybrid_property
+    # def goals_scored(self):
+    #     return sum(stat.goals_scored for stat in self.player_team_stats)
+    #
+    # @hybrid_property
+    # def assists(self):
+    #     return sum(stat.assists for stat in self.player_team_stats)
+    #
     # @hybrid_property
     # def save_percentage(self):
     #     try:
-    #         (self.saves_made) / (self.goals_against) * 100
+    #         return (self.saves_made) / (self.goals_against) * 100
     #     except ZeroDivisionError:
     #         return 100
-    #     else:
-    #         return (self.saves_made) / (self.goals_against) * 100
-
-    @hybrid_property
-    def matches_played(self):
-        teams = db.session.query(team_membership).filter_by(user_id=self.id).all()
-        total = [stats.matches_played for stats in teams]
-
-        return sum(total)
-
-    @hybrid_property
-    def goals_scored(self):
-        teams = db.session.query(team_membership).filter_by(user_id=self.id).all()
-        total = [stats.goals_scored for stats in teams]
-        return sum(total)
-
-    @hybrid_property
-    def assists(self):
-        teams = db.session.query(team_membership).filter_by(user_id=self.id).all()
-        total = [stats.assists for stats in teams]
-        return sum(total)
 
     def get_reset_token(self):
         s = Serializer(current_app.config['SECRET_KEY'])
@@ -131,6 +121,10 @@ class Match(db.Model):
     home_team_info = relationship('Team', foreign_keys=[home_team])
     away_team_info = relationship('Team', foreign_keys=[away_team])
 
+    teams = relationship('Team', secondary='match_membership', back_populates='matches')
+    player_stats = relationship('PlayerStats', back_populates='match')
+
+
 
 class League(db.Model):
     __tablename__ = "leagues"
@@ -145,7 +139,6 @@ class League(db.Model):
     bio = db.Column(db.Text, default=default_bio)
 
     teams = relationship("Team", back_populates="parent_league", cascade="all, delete-orphan")
-
 
 class Team(db.Model):
     __tablename__ = "teams"
@@ -165,12 +158,12 @@ class Team(db.Model):
     logo = db.Column(db.String(1000))
     password = db.Column(db.String(1000), nullable=False)
 
-
-
     captain_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     captain = relationship("User", foreign_keys=[captain_id])
 
-    players = relationship("User", secondary=team_membership, backref="teams_joined")
+    players = relationship("User", secondary=team_membership, backref="team_players")
+    stats = relationship('PlayerStats', back_populates='team')
+    matches = relationship('Match', secondary='match_membership', back_populates="teams")
 
     @hybrid_property
     def points(self):

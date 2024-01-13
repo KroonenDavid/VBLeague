@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, IntegerField
+from wtforms import StringField, SubmitField, IntegerField, BooleanField
 from wtforms.validators import DataRequired, Length
 from flask_ckeditor import CKEditorField
 
@@ -19,5 +19,14 @@ class PostMatchInfoForm(FlaskForm):
 
 class HighlightsForm(FlaskForm):
     highlights_link = StringField()
+
+    submit = SubmitField("Add")
+
+class PlayerMatchStats(FlaskForm):
+    goals_scored = StringField()
+    assists = StringField()
+    saves_made = StringField()
+    goals_against = StringField()
+    match_played = BooleanField()
 
     submit = SubmitField("Add")
